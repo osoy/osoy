@@ -1,2 +1,6 @@
 osoy: src/*.rs
-	cargo build
+	cargo build --release
+	strip target/release/osoy
+
+clean:
+	cargo clean
