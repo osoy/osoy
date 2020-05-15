@@ -81,7 +81,7 @@ pub fn get_links_to(target: &Path, dir: &Path) -> Vec<PathBuf> {
         for entry in entries {
             if let Ok(entry) = entry {
                 let entry_path = entry.path();
-                if get_node_target(entry_path.as_path()).as_path() == target {
+                if get_node_target(entry_path.as_path()).as_path() == get_node_target(target).as_path() {
                     links.push(entry_path)
                 }
             }
