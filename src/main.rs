@@ -2,8 +2,8 @@ use dirs::home_dir;
 use std::env::args;
 use std::path::Path;
 
-mod usage;
-use usage::{error, msg, print_usage};
+mod output;
+use output::{error, msg, print_usage};
 
 mod query;
 use query::{get_exes, get_links_to, get_repos};
