@@ -8,8 +8,8 @@ use output::{error, msg, print_usage};
 mod query;
 use query::{get_exes, get_links_to, get_repos};
 
-fn list(pkg_path: &Path, bin_path: &Path) {
-    for repo in get_repos(pkg_path) {
+fn list(pkg_path: &Path, bin_path: &Path, query: &[String]) {
+    for repo in get_repos(pkg_path, pkg_path, &query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
             if let Some(repo_id) = rel_path.to_str() {
                 println!("{}", repo_id);
@@ -52,6 +52,7 @@ fn main() {
                     "l" | "list" => list(
                         osoy_path.join("packages").as_path(),
                         osoy_path.join("bin").as_path(),
+                        &args[2..],
                     ),
                     "c" | "clone" => msg("to be implemented: clone <query>"),
                     "r" | "remove" => msg("to be implemented: remove <query>"),
