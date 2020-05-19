@@ -8,33 +8,27 @@ mod args;
 use args::parse_args;
 
 mod operator;
-use operator::list;
+use operator::{clone, list};
 
 fn main() {
-    match parse_args(&args().collect::<Vec<String>>()[1..], &["c"], &["d"]) {
+    match parse_args(&args().collect::<Vec<String>>()[1..], &["c"], &[]) {
         Err(msg) => error(&msg),
-        Ok((flags, words, opts)) => {
-            println!("words:{}", words.join(","),);
-            println!("flags:{}", flags.join(","),);
-            println!(
-                "opts:{}",
-                opts.iter()
-                    .map(|(k, v)| format!("{}={}", k, v))
-                    .collect::<Vec<String>>()
-                    .join(",")
-            );
-
+        Ok((words, _flags, _opts)) => {
             if let Some(home) = home_dir() {
                 let osoy_path = home.join(".osoy");
                 if osoy_path.is_dir() {
                     match words.get(0) {
                         Some(operator) => match operator.as_str() {
                             "l" | "list" => list(
-                                osoy_path.join("packages").as_path(),
-                                osoy_path.join("bin").as_path(),
+                                &osoy_path.join("packages"),
+                                &osoy_path.join("bin"),
                                 &words[1..],
                             ),
-                            "c" | "clone" => msg("to be implemented: clone <query>"),
+                            "c" | "clone" => clone(
+                                &osoy_path.join("packages"),
+                                &osoy_path.join("bin"),
+                                &words[1..],
+                            ),
                             "r" | "remove" => msg("to be implemented: remove <query>"),
                             "s" | "symlink" => msg("to be implemented: symlink [query]"),
                             "u" | "update" => msg("to be implemented: update [query]"),
