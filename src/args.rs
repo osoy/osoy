@@ -5,8 +5,8 @@ pub fn parse_args(
     valid_flags: &[&str],
     valid_opts: &[&str],
 ) -> Result<(Vec<String>, Vec<String>, HashMap<String, String>), String> {
-    let mut words: Vec<String> = vec![];
-    let mut flags: Vec<String> = vec![];
+    let mut words: Vec<String> = Vec::new();
+    let mut flags: Vec<String> = Vec::new();
     let mut opts: HashMap<String, String> = HashMap::new();
     let mut listener_opt = String::new();
 

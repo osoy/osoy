@@ -79,7 +79,7 @@ fn remove_orphan_links(bin_path: &Path) {
 }
 
 pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String]) {
-    let mut repos: Vec<PathBuf> = vec![];
+    let mut repos: Vec<PathBuf> = Vec::new();
     println!("Removing following packages:");
     for repo in get_repos(pkg_path, pkg_path, &query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {

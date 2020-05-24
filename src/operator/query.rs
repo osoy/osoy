@@ -48,7 +48,7 @@ fn path_matches_query(path: &Path, query: &[String]) -> bool {
 }
 
 pub fn get_repos(dir: &Path, prefix: &Path, query: &[String]) -> Vec<PathBuf> {
-    let mut repos: Vec<PathBuf> = vec![];
+    let mut repos: Vec<PathBuf> = Vec::new();
     if dir.join(".git").is_dir() {
         if let Ok(rel) = dir.strip_prefix(prefix) {
             if path_matches_query(rel, query) {
@@ -71,7 +71,7 @@ pub fn get_repos(dir: &Path, prefix: &Path, query: &[String]) -> Vec<PathBuf> {
 }
 
 pub fn get_exes(dir: &Path) -> Vec<PathBuf> {
-    let mut exes: Vec<PathBuf> = vec![];
+    let mut exes: Vec<PathBuf> = Vec::new();
     if let Ok(entries) = dir.read_dir() {
         for entry in entries {
             if let Ok(entry) = entry {
@@ -88,7 +88,7 @@ pub fn get_exes(dir: &Path) -> Vec<PathBuf> {
 }
 
 pub fn get_links_to(target: &Path, dir: &Path) -> Vec<PathBuf> {
-    let mut links: Vec<PathBuf> = vec![];
+    let mut links: Vec<PathBuf> = Vec::new();
     if let Ok(entries) = dir.read_dir() {
         for entry in entries {
             if let Ok(entry) = entry {
@@ -103,7 +103,7 @@ pub fn get_links_to(target: &Path, dir: &Path) -> Vec<PathBuf> {
 }
 
 pub fn get_orphan_links(dir: &Path) -> Vec<PathBuf> {
-    let mut links: Vec<PathBuf> = vec![];
+    let mut links: Vec<PathBuf> = Vec::new();
     if let Ok(entries) = dir.read_dir() {
         for entry in entries {
             if let Ok(entry) = entry {
