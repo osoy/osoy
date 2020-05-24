@@ -8,7 +8,7 @@ mod args;
 use args::parse_args;
 
 mod operator;
-use operator::{clone, list};
+use operator::{clone, list, remove};
 
 fn main() {
     match parse_args(&args().collect::<Vec<String>>()[1..], &["c"], &[]) {
@@ -24,12 +24,8 @@ fn main() {
                                 &osoy_path.join("bin"),
                                 &words[1..],
                             ),
-                            "c" | "clone" => clone(
-                                &osoy_path.join("packages"),
-                                &osoy_path.join("bin"),
-                                &words[1..],
-                            ),
-                            "r" | "remove" => msg("to be implemented: remove <query>"),
+                            "c" | "clone" => clone(&osoy_path.join("packages"), &words[1..]),
+                            "r" | "remove" => remove(&osoy_path.join("packages"), &words[1..]),
                             "s" | "symlink" => msg("to be implemented: symlink [query]"),
                             "u" | "update" => msg("to be implemented: update [query]"),
                             "m" | "make" => msg("to be implemented: make [query]"),
