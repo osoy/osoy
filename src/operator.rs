@@ -1,10 +1,10 @@
 use regex::Regex;
-use std::fs::remove_dir_all;
+use std::fs::{remove_dir_all, remove_file};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 mod query;
-use query::{get_exes, get_links_to, get_repos, url_from_query};
+use query::{create_symlink, get_exes, get_links_to, get_orphan_links, get_repos, url_from_query};
 
 mod prompt;
 use prompt::{prompt_no, prompt_yes};
@@ -12,9 +12,7 @@ use prompt::{prompt_no, prompt_yes};
 pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String]) {
     for repo in get_repos(pkg_path, pkg_path, &query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
-            if let Some(repo_id) = rel_path.to_str() {
-                println!("{}", repo_id);
-            }
+            println!("{}", rel_path.display());
         }
         for exe in get_exes(&repo) {
             if let Some(filename_os) = exe.file_name() {
@@ -48,7 +46,7 @@ pub fn clone(pkg_path: &Path, query: &[String]) {
             let repo_path = pkg_path.join(Regex::new("^.*://").unwrap().replace(&url, "").as_ref());
             if let Some(repo_id) = repo_path.to_str() {
                 if !repo_path.exists()
-                    || prompt_no(&format!("Package '{}' exists. Overwrite?", repo_id))
+                    || prompt_no(&format!("package '{}' exists. overwrite?", repo_id))
                 {
                     if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
                         Command::new("git")
@@ -70,27 +68,82 @@ pub fn clone(pkg_path: &Path, query: &[String]) {
     }
 }
 
-pub fn remove(pkg_path: &Path, query: &[String]) {
+fn remove_orphan_links(bin_path: &Path) {
+    let mut count = 0;
+    for link in get_orphan_links(bin_path) {
+        if remove_file(&link).is_ok() {
+            count += 1;
+        }
+    }
+    println!("{} orphan links removed", count);
+}
+
+pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String]) {
     let mut repos: Vec<PathBuf> = vec![];
     println!("Removing following packages:");
     for repo in get_repos(pkg_path, pkg_path, &query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
-            if let Some(repo_id) = rel_path.to_str() {
-                println!("{}", repo_id);
-                repos.push(repo);
-            }
+            println!("{}", rel_path.display());
+            repos.push(repo);
         }
     }
     if prompt_yes("Proceed?") {
         for repo in repos {
             if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
-                if let Some(repo_id) = rel_path.to_str() {
-                    match remove_dir_all(&repo) {
-                        Ok(_) => println!("package '{}' removed", repo_id),
-                        Err(_) => println!("failed to remove package '{}'", repo_id),
-                    };
+                match remove_dir_all(&repo) {
+                    Ok(_) => println!("package '{}' removed", rel_path.display()),
+                    Err(_) => println!("failed to remove package '{}'", rel_path.display()),
+                };
+            }
+        }
+        remove_orphan_links(bin_path);
+    }
+}
+
+pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String]) {
+    remove_orphan_links(bin_path);
+    let mut count = 0;
+    for repo in get_repos(pkg_path, pkg_path, &query) {
+        for exe in get_exes(&repo) {
+            if let Some(filename_os) = exe.file_name() {
+                if let Some(filename) = filename_os.to_str() {
+                    if get_links_to(&exe, bin_path).len() == 0 {
+                        let link = bin_path.join(filename);
+                        if !link.exists()
+                            || prompt_no(&format!(
+                                "node '{}' exists. overwrite pointing to '{}'?",
+                                link.display(),
+                                if let Ok(rel_path) = exe.strip_prefix(pkg_path) {
+                                    rel_path.display()
+                                } else {
+                                    exe.display()
+                                }
+                            ))
+                        {
+                            if !link.exists() || remove_file(&link).is_ok() {
+                                match create_symlink(&exe, &link) {
+                                    Ok(_) => {
+                                        println!(
+                                            "{} -> {}",
+                                            filename,
+                                            if let Ok(rel_path) = exe.strip_prefix(pkg_path) {
+                                                rel_path.display()
+                                            } else {
+                                                exe.display()
+                                            }
+                                        );
+                                        count += 1;
+                                    }
+                                    Err(_) => println!("failed to link"),
+                                }
+                            } else {
+                                println!("failed to remove '{}'", link.display());
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+    println!("{} links created", count);
 }

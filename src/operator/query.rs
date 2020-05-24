@@ -1,10 +1,28 @@
 use regex::Regex;
-use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
+
+mod fsmeta;
+pub use fsmeta::create_symlink;
+use fsmeta::{is_exe, is_symlink};
+
+fn resolve_relative_link(node: &Path, target: &Path) -> PathBuf {
+    if let Some(parent) = node.parent() {
+        return parent.join(&target);
+    } else {
+        return target.to_path_buf();
+    }
+}
 
 fn get_node_target(node: &Path) -> PathBuf {
     match node.read_link() {
-        Ok(target) => get_node_target(&target),
+        Ok(target) => {
+            let target = resolve_relative_link(node, &target);
+            if &target == node {
+                return target;
+            } else {
+                return get_node_target(&target);
+            }
+        }
         Err(_) => node.to_path_buf(),
     }
 }
@@ -59,10 +77,8 @@ pub fn get_exes(dir: &Path) -> Vec<PathBuf> {
             if let Ok(entry) = entry {
                 let entry_path = entry.path();
                 if entry_path.is_file() {
-                    if let Ok(attr) = entry_path.metadata() {
-                        if attr.mode() & 0o100 > 0 {
-                            exes.push(entry_path);
-                        }
+                    if is_exe(&entry_path) {
+                        exes.push(entry_path);
                     }
                 }
             }
@@ -79,6 +95,23 @@ pub fn get_links_to(target: &Path, dir: &Path) -> Vec<PathBuf> {
                 let entry_path = entry.path();
                 if &get_node_target(&entry_path) == &get_node_target(target) {
                     links.push(entry_path)
+                }
+            }
+        }
+    }
+    links
+}
+
+pub fn get_orphan_links(dir: &Path) -> Vec<PathBuf> {
+    let mut links: Vec<PathBuf> = vec![];
+    if let Ok(entries) = dir.read_dir() {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                let entry_path = entry.path();
+                if is_symlink(&entry_path) {
+                    if !get_node_target(&entry_path).exists() {
+                        links.push(entry_path)
+                    }
                 }
             }
         }
