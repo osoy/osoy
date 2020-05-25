@@ -10,7 +10,7 @@ mod prompt;
 use prompt::{prompt_no, prompt_yes};
 
 pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String]) {
-    for repo in get_repos(pkg_path, pkg_path, &query) {
+    for repo in get_repos(pkg_path, pkg_path, query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
             println!("{}", rel_path.display());
         }
@@ -38,36 +38,6 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String]) {
     }
 }
 
-pub fn clone(pkg_path: &Path, query: &[String]) {
-    let mut count = 0;
-    for q in query {
-        if let Some(url) = url_from_query(&q) {
-            let repo_path = pkg_path.join(Regex::new("^.*://").unwrap().replace(&url, "").as_ref());
-            let repo_id = repo_path.to_string_lossy();
-            if !repo_path.exists()
-                || prompt_no(&format!("package '{}' exists. overwrite?", repo_id))
-            {
-                if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
-                    match Command::new("git").args(&["clone", &url, &repo_id]).spawn() {
-                        Ok(mut child) => match child.wait() {
-                            Ok(_) => {
-                                count += 1;
-                            }
-                            Err(msg) => println!("git clone failed '{}'", msg),
-                        },
-                        Err(msg) => println!("git clone failed to start '{}'", msg),
-                    }
-                } else {
-                    println!("failed to remove package '{}'", repo_id);
-                }
-            }
-        } else {
-            println!("couldn't build url from query '{}'", q);
-        }
-    }
-    println!("{} packages cloned", count);
-}
-
 fn remove_orphan_links(bin_path: &Path) {
     let mut count = 0;
     for link in get_orphan_links(bin_path) {
@@ -82,7 +52,7 @@ pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String]) {
     let mut count = 0;
     let mut repos: Vec<PathBuf> = Vec::new();
     println!("Removing following packages:");
-    for repo in get_repos(pkg_path, pkg_path, &query) {
+    for repo in get_repos(pkg_path, pkg_path, query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
             println!("{}", rel_path.display());
             repos.push(repo);
@@ -108,7 +78,7 @@ pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String]) {
 pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String]) {
     remove_orphan_links(bin_path);
     let mut count = 0;
-    for repo in get_repos(pkg_path, pkg_path, &query) {
+    for repo in get_repos(pkg_path, pkg_path, query) {
         for exe in get_exes(&repo) {
             if let Some(filename_os) = exe.file_name() {
                 if let Some(filename) = filename_os.to_str() {
@@ -151,4 +121,39 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String]) {
         }
     }
     println!("{} links created", count);
+}
+
+pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String]) {
+    let mut cloned_ids: Vec<String> = Vec::new();
+    for q in query {
+        if let Some(url) = url_from_query(&q) {
+            let repo_id = Regex::new("^.*://").unwrap().replace(&url, "");
+            let repo_path = pkg_path.join(repo_id.as_ref());
+            if !repo_path.exists()
+                || prompt_no(&format!("package '{}' exists. overwrite?", repo_id))
+            {
+                if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
+                    match Command::new("git")
+                        .args(&["clone", &url, &repo_path.to_string_lossy()])
+                        .status()
+                    {
+                        Ok(result) => {
+                            if result.success() {
+                                cloned_ids.push(String::from(repo_id));
+                            } else {
+                                println!("git clone failed");
+                            }
+                        }
+                        Err(msg) => println!("git clone failed to start '{}'", msg),
+                    }
+                } else {
+                    println!("failed to remove package '{}'", repo_id);
+                }
+            }
+        } else {
+            println!("couldn't build url from query '{}'", q);
+        }
+    }
+    symlink(pkg_path, bin_path, &cloned_ids);
+    println!("{} packages cloned", cloned_ids.len());
 }

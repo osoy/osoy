@@ -24,7 +24,11 @@ fn main() {
                                 &osoy_path.join("bin"),
                                 &words[1..],
                             ),
-                            "c" | "clone" => clone(&osoy_path.join("packages"), &words[1..]),
+                            "c" | "clone" => clone(
+                                &osoy_path.join("packages"),
+                                &osoy_path.join("bin"),
+                                &words[1..],
+                            ),
                             "r" | "remove" => remove(
                                 &osoy_path.join("packages"),
                                 &osoy_path.join("bin"),
@@ -35,8 +39,8 @@ fn main() {
                                 &osoy_path.join("bin"),
                                 &words[1..],
                             ),
-                            "u" | "update" => msg("to be implemented: update [query]"),
                             "m" | "make" => msg("to be implemented: make [query]"),
+                            "u" | "update" => msg("to be implemented: update [query]"),
                             "dir" => msg("to be implemented: dir <query>"),
                             "read" => msg("to be implemented: read <query>"),
                             "license" => msg("to be implemented: license <query>"),
