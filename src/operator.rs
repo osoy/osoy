@@ -41,6 +41,7 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String]) {
 }
 
 pub fn clone(pkg_path: &Path, query: &[String]) {
+    let mut count = 0;
     for q in query {
         if let Some(url) = url_from_query(&q) {
             let repo_path = pkg_path.join(Regex::new("^.*://").unwrap().replace(&url, "").as_ref());
@@ -49,12 +50,15 @@ pub fn clone(pkg_path: &Path, query: &[String]) {
                     || prompt_no(&format!("package '{}' exists. overwrite?", repo_id))
                 {
                     if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
-                        Command::new("git")
-                            .args(&["clone", &url, repo_id])
-                            .spawn()
-                            .expect("git clone failed to start")
-                            .wait()
-                            .expect("git clone failed");
+                        match Command::new("git").args(&["clone", &url, repo_id]).spawn() {
+                            Ok(mut child) => match child.wait() {
+                                Ok(_) => {
+                                    count += 1;
+                                }
+                                Err(msg) => println!("git clone failed '{}'", msg),
+                            },
+                            Err(msg) => println!("git clone failed to start '{}'", msg),
+                        }
                     } else {
                         println!("failed to remove package '{}'", repo_id);
                     }
@@ -66,6 +70,7 @@ pub fn clone(pkg_path: &Path, query: &[String]) {
             println!("couldn't build url from query '{}'", q);
         }
     }
+    println!("{} packages cloned", count);
 }
 
 fn remove_orphan_links(bin_path: &Path) {
@@ -75,10 +80,11 @@ fn remove_orphan_links(bin_path: &Path) {
             count += 1;
         }
     }
-    println!("{} orphan links removed", count);
+    println!("{} links removed", count);
 }
 
 pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String]) {
+    let mut count = 0;
     let mut repos: Vec<PathBuf> = Vec::new();
     println!("Removing following packages:");
     for repo in get_repos(pkg_path, pkg_path, &query) {
@@ -91,13 +97,17 @@ pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String]) {
         for repo in repos {
             if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
                 match remove_dir_all(&repo) {
-                    Ok(_) => println!("package '{}' removed", rel_path.display()),
+                    Ok(_) => {
+                        count += 1;
+                        println!("package '{}' removed", rel_path.display());
+                    }
                     Err(_) => println!("failed to remove package '{}'", rel_path.display()),
                 };
             }
         }
         remove_orphan_links(bin_path);
     }
+    println!("{} packages removed", count);
 }
 
 pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String]) {
@@ -123,6 +133,7 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String]) {
                             if !link.exists() || remove_file(&link).is_ok() {
                                 match create_symlink(&exe, &link) {
                                     Ok(_) => {
+                                        count += 1;
                                         println!(
                                             "{} -> {}",
                                             filename,
@@ -132,7 +143,6 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String]) {
                                                 exe.display()
                                             }
                                         );
-                                        count += 1;
                                     }
                                     Err(_) => println!("failed to link"),
                                 }
