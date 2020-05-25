@@ -36,10 +36,8 @@ fn path_matches_query(path: &Path, query: &[String]) -> bool {
             return true;
         } else {
             if let Ok(re) = Regex::new(&["/", &q.replace(".", "[^/]"), "$"].join("")) {
-                if let Some(path_str) = path.to_str() {
-                    if re.is_match(&["/", path_str].join("")) {
-                        return true;
-                    }
+                if re.is_match(&["/", &path.to_string_lossy()].join("")) {
+                    return true;
                 }
             }
         }

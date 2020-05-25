@@ -16,24 +16,22 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String]) {
         }
         for exe in get_exes(&repo) {
             if let Some(filename_os) = exe.file_name() {
-                if let Some(filename) = filename_os.to_str() {
-                    let links = get_links_to(&exe, bin_path);
-                    if links.len() == 0 {
-                        println!("  {}", filename);
-                    } else {
-                        let mut link_list = String::new();
-                        for link in links {
-                            if let Some(filename_os) = link.file_name() {
-                                if let Some(filename) = filename_os.to_str() {
-                                    if !link_list.is_empty() {
-                                        link_list.push_str(", ");
-                                    }
-                                    link_list.push_str(filename);
-                                }
+                let filename = filename_os.to_string_lossy();
+                let links = get_links_to(&exe, bin_path);
+                if links.len() == 0 {
+                    println!("  {}", filename);
+                } else {
+                    let mut link_list = String::new();
+                    for link in links {
+                        if let Some(filename_os) = link.file_name() {
+                            let filename = filename_os.to_string_lossy();
+                            if !link_list.is_empty() {
+                                link_list.push_str(", ");
                             }
+                            link_list.push_str(&filename);
                         }
-                        println!("  {} <- {}", filename, link_list);
                     }
+                    println!("  {} <- {}", filename, link_list);
                 }
             }
         }
@@ -45,26 +43,23 @@ pub fn clone(pkg_path: &Path, query: &[String]) {
     for q in query {
         if let Some(url) = url_from_query(&q) {
             let repo_path = pkg_path.join(Regex::new("^.*://").unwrap().replace(&url, "").as_ref());
-            if let Some(repo_id) = repo_path.to_str() {
-                if !repo_path.exists()
-                    || prompt_no(&format!("package '{}' exists. overwrite?", repo_id))
-                {
-                    if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
-                        match Command::new("git").args(&["clone", &url, repo_id]).spawn() {
-                            Ok(mut child) => match child.wait() {
-                                Ok(_) => {
-                                    count += 1;
-                                }
-                                Err(msg) => println!("git clone failed '{}'", msg),
-                            },
-                            Err(msg) => println!("git clone failed to start '{}'", msg),
-                        }
-                    } else {
-                        println!("failed to remove package '{}'", repo_id);
+            let repo_id = repo_path.to_string_lossy();
+            if !repo_path.exists()
+                || prompt_no(&format!("package '{}' exists. overwrite?", repo_id))
+            {
+                if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
+                    match Command::new("git").args(&["clone", &url, &repo_id]).spawn() {
+                        Ok(mut child) => match child.wait() {
+                            Ok(_) => {
+                                count += 1;
+                            }
+                            Err(msg) => println!("git clone failed '{}'", msg),
+                        },
+                        Err(msg) => println!("git clone failed to start '{}'", msg),
                     }
+                } else {
+                    println!("failed to remove package '{}'", repo_id);
                 }
-            } else {
-                println!("couldn't map url '{}' to directory path", url);
             }
         } else {
             println!("couldn't build url from query '{}'", q);
