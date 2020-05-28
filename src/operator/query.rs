@@ -142,3 +142,21 @@ pub fn url_from_query(query: &str) -> Option<String> {
     }
     None
 }
+
+pub fn get_first_file(dir: &Path, re: &str) -> Option<PathBuf> {
+    if let Ok(entries) = dir.read_dir() {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                let entry_path = entry.path();
+                if entry_path.is_file()
+                    && Regex::new(re)
+                        .unwrap()
+                        .is_match(&entry.file_name().to_string_lossy())
+                {
+                    return Some(entry_path);
+                }
+            }
+        }
+    }
+    None
+}

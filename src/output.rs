@@ -6,12 +6,12 @@ pub fn print_usage() {
   Operators:
     c|clone    <query*>   clone packages from GitHub, GitLab or Bitbucket
     r|remove   <query*>   remove packages
-    s|symlink  [query*]   link packages' executables to PATH
-    u|update   [query*]   update (all) packages
     l|list     [query*]   list (all) packages
     m|make     [query*]   make (all) packages
+    s|symlink  [query*]   link packages' executables to PATH
+    u|update   [query*]   update (all) packages
     dir        <query>    print package's directory path
-    read       <query>    view package's README file
+    readme     <query>    view package's README file
     license    <query>    view package's LICENSE file
     uninstall  -          uninstall osoy and all packages
 

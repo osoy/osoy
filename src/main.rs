@@ -2,17 +2,17 @@ use dirs::home_dir;
 use std::env::args;
 
 mod output;
-use output::{error, msg, print_usage};
+use output::print_usage;
 
 mod args;
 use args::parse_args;
 
 mod operator;
-use operator::{clone, list, remove, symlink};
+use operator::{cat, clone, dir, list, make, remove, symlink, update};
 
 fn main() {
     match parse_args(&args().collect::<Vec<String>>()[1..], &["c"], &[]) {
-        Err(msg) => error(&msg),
+        Err(msg) => println!("{}", msg),
         Ok((words, _flags, _opts)) => {
             if let Some(home) = home_dir() {
                 let osoy_path = home.join(".osoy");
@@ -39,20 +39,36 @@ fn main() {
                                 &osoy_path.join("bin"),
                                 &words[1..],
                             ),
-                            "m" | "make" => msg("to be implemented: make [query]"),
-                            "u" | "update" => msg("to be implemented: update [query]"),
-                            "dir" => msg("to be implemented: dir <query>"),
-                            "read" => msg("to be implemented: read <query>"),
-                            "license" => msg("to be implemented: license <query>"),
-                            _ => error(&format!("unknown operator '{}'", operator)),
+                            "u" | "update" => update(
+                                &osoy_path.join("packages"),
+                                &osoy_path.join("bin"),
+                                &words[1..],
+                            ),
+                            "m" | "make" => make(
+                                &osoy_path.join("packages"),
+                                &osoy_path.join("bin"),
+                                &words[1..],
+                            ),
+                            "dir" => dir(&osoy_path.join("packages"), &words[1..]),
+                            "readme" => cat(
+                                &osoy_path.join("packages"),
+                                &words[1..],
+                                "(README|readme)(.md)?",
+                            ),
+                            "license" => cat(
+                                &osoy_path.join("packages"),
+                                &words[1..],
+                                "(LICENSE|license)(.md)?",
+                            ),
+                            _ => println!("unknown operator '{}'", operator),
                         },
                         None => print_usage(),
                     }
                 } else {
-                    error("osoy directory not found")
+                    println!("osoy directory not found")
                 }
             } else {
-                error("home directory not found")
+                println!("home directory not found")
             }
         }
     }

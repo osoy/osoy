@@ -9,9 +9,9 @@ pub fn prompt_yes(msg: &str) -> bool {
             "Y" | "y" | "" => return true,
             _ => return false,
         },
-        Err(_) => {}
+        Err(msg) => println!("error: {}", msg),
     }
-    false
+    true
 }
 
 pub fn prompt_no(msg: &str) -> bool {
@@ -23,7 +23,7 @@ pub fn prompt_no(msg: &str) -> bool {
             "Y" | "y" => return true,
             _ => return false,
         },
-        Err(_) => {}
+        Err(msg) => println!("error: {}", msg),
     }
     false
 }
