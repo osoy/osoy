@@ -11,7 +11,7 @@ mod operator;
 use operator::{cat, clone, dir, list, make, remove, symlink, update};
 
 fn main() {
-    match parse_args(&args().collect::<Vec<String>>()[1..], &["c"], &[]) {
+    match parse_args(&args().collect::<Vec<String>>()[1..], &[], &[]) {
         Err(msg) => println!("{}", msg),
         Ok((words, _flags, _opts)) => {
             if let Some(home) = home_dir() {
