@@ -162,8 +162,11 @@ pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, de
     } else {
         for q in query {
             if let Some(url) = url_from_query(&q) {
-                let repo_id = Regex::new("^.*://").unwrap().replace(&url, "");
-                let repo_path = pkg_path.join(repo_id.as_ref());
+                let repo_id = Regex::new("^.*://")
+                    .unwrap()
+                    .replace(&url, "")
+                    .to_lowercase();
+                let repo_path = pkg_path.join(&repo_id);
                 if !repo_path.exists()
                     || force
                     || (!defaults
