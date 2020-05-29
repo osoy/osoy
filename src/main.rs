@@ -18,9 +18,11 @@ fn main() {
             ("h", "help"),
             ("c", "color"),
             ("f", "force"),
+            ("v", "version"),
             ("help", "help"),
             ("color", "color"),
             ("force", "force"),
+            ("version", "version"),
         ]
         .iter()
         .cloned()
@@ -31,6 +33,8 @@ fn main() {
         Ok((words, flags, _)) => {
             if flags.contains(&String::from("help")) {
                 print_usage(flags.contains(&String::from("color")));
+            } else if flags.contains(&String::from("version")) {
+                println!("{}", env!("CARGO_PKG_VERSION"));
             } else {
                 if let Some(home) = home_dir() {
                     let osoy_path = home.join(".osoy");
