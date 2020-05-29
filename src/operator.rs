@@ -66,7 +66,7 @@ fn remove_orphan_links(bin_path: &Path) {
     println!("{} links removed", count);
 }
 
-pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
+pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
 
@@ -80,7 +80,7 @@ pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
             }
         }
 
-        if force || prompt_yes("proceed?") {
+        if force || defaults || prompt_yes("proceed?") {
             for repo in repos {
                 if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
                     match remove_dir_all(&repo) {
@@ -100,7 +100,7 @@ pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
     }
 }
 
-pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
+pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
     remove_orphan_links(bin_path);
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
@@ -115,15 +115,16 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) 
                             let link = bin_path.join(filename);
                             if !link.exists()
                                 || force
-                                || prompt_no(&format!(
-                                    "node '{}' exists. overwrite pointing to '{}'?",
-                                    link.display(),
-                                    if let Ok(rel_path) = exe.strip_prefix(pkg_path) {
-                                        rel_path.display()
-                                    } else {
-                                        exe.display()
-                                    }
-                                ))
+                                || (!defaults
+                                    && prompt_no(&format!(
+                                        "node '{}' exists. overwrite pointing to '{}'?",
+                                        link.display(),
+                                        if let Ok(rel_path) = exe.strip_prefix(pkg_path) {
+                                            rel_path.display()
+                                        } else {
+                                            exe.display()
+                                        }
+                                    )))
                             {
                                 if !link.exists() || remove_file(&link).is_ok() {
                                     match create_symlink(&exe, &link) {
@@ -154,7 +155,7 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) 
     }
 }
 
-pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
+pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
     let mut cloned_ids: Vec<String> = Vec::new();
     if query.len() <= 0 {
         println!("query required");
@@ -165,7 +166,8 @@ pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
                 let repo_path = pkg_path.join(repo_id.as_ref());
                 if !repo_path.exists()
                     || force
-                    || prompt_no(&format!("package '{}' exists. overwrite?", repo_id))
+                    || (!defaults
+                        && prompt_no(&format!("package '{}' exists. overwrite?", repo_id)))
                 {
                     if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
                         match Command::new("git")
@@ -189,12 +191,12 @@ pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
                 println!("couldn't build url from query '{}'", q);
             }
         }
-        symlink(pkg_path, bin_path, &cloned_ids, force);
+        symlink(pkg_path, bin_path, &cloned_ids, force, defaults);
         println!("{} packages cloned", cloned_ids.len());
     }
 }
 
-pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
+pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
@@ -219,12 +221,12 @@ pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
                 }
             }
         }
-        symlink(pkg_path, bin_path, query, force);
+        symlink(pkg_path, bin_path, query, force, defaults);
         println!("{} packages updated", count);
     }
 }
 
-pub fn make(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
+pub fn make(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
@@ -251,8 +253,8 @@ pub fn make(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool) {
                 }
             }
         }
-        symlink(pkg_path, bin_path, query, force);
-        println!("{} packages updated", count);
+        symlink(pkg_path, bin_path, query, force, defaults);
+        println!("{} packages built", count);
     }
 }
 

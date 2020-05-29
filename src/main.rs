@@ -19,10 +19,12 @@ fn main() {
             ("c", "color"),
             ("f", "force"),
             ("v", "version"),
+            ("d", "defaults"),
             ("help", "help"),
             ("color", "color"),
             ("force", "force"),
             ("version", "version"),
+            ("defaults", "defaults"),
         ]
         .iter()
         .cloned()
@@ -52,30 +54,35 @@ fn main() {
                                     &osoy_path.join("bin"),
                                     &words[1..],
                                     flags.contains(&String::from("force")),
+                                    flags.contains(&String::from("defaults")),
                                 ),
                                 "r" | "remove" => remove(
                                     &osoy_path.join("packages"),
                                     &osoy_path.join("bin"),
                                     &words[1..],
                                     flags.contains(&String::from("force")),
+                                    flags.contains(&String::from("defaults")),
                                 ),
                                 "s" | "symlink" => symlink(
                                     &osoy_path.join("packages"),
                                     &osoy_path.join("bin"),
                                     &words[1..],
                                     flags.contains(&String::from("force")),
+                                    flags.contains(&String::from("defaults")),
                                 ),
                                 "u" | "update" => update(
                                     &osoy_path.join("packages"),
                                     &osoy_path.join("bin"),
                                     &words[1..],
                                     flags.contains(&String::from("force")),
+                                    flags.contains(&String::from("defaults")),
                                 ),
                                 "m" | "make" => make(
                                     &osoy_path.join("packages"),
                                     &osoy_path.join("bin"),
                                     &words[1..],
                                     flags.contains(&String::from("force")),
+                                    flags.contains(&String::from("defaults")),
                                 ),
                                 "dir" => dir(&osoy_path.join("packages"), &words[1..]),
                                 "readme" => cat(

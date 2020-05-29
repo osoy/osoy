@@ -30,7 +30,7 @@ This software relies on extended file metadata to determine whether a file is ex
 
 `git` & `make` are required for the application to function.
 
-`make`, `rustc` & `cargo` are required to build the executable.
+`make` & `cargo` are required to build the executable.
 
 ## Usage
 
@@ -38,29 +38,30 @@ This software relies on extended file metadata to determine whether a file is ex
 
 #### Operators
 
-    c|clone    <query*>   clone packages from GitHub, GitLab or Bitbucket
-    r|remove   <query*>   remove packages
-    l|list     [query*]   list (all) packages
-    m|make     [query*]   make (all) packages
-    s|symlink  [query*]   make packages' executables available in PATH
-    u|update   [query*]   update (all) packages
+    c|clone    <query*>  clone packages from GitHub, GitLab or Bitbucket
+    r|remove   <query*>  remove packages
+    l|list     [query*]  list (all) packages
+    m|make     [query*]  make (all) packages
+    s|symlink  [query*]  make packages' executables available in PATH
+    u|update   [query*]  update (all) packages
 
-    dir        <query>    print package's directory path
-    read       <query>    view package's README file
-    license    <query>    view package's LICENSE file
+    dir        <query>   print package's directory path
+    read       <query>   view package's README file
+    license    <query>   view package's LICENSE file
 
 #### Query syntax
 
-    <[[domain/]author/]package>
+`<[[domain/]author/]package>` or `<link>`
 
-Default domain is github.com & default author is <package>.
+Default domain is github.com & default author is `<package>`.
 
 #### Flags
 
-    -c --color    enable colors
-    -f --force    force prompts
-    -h --help     show usage
-    -v --version  show version
+    -c --color     enable colors
+    -f --force     force prompts
+    -d --defaults  continue with prompt defaults
+    -h --help      show usage
+    -v --version   show version
 
 ## Installation
 
