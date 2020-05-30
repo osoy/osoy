@@ -9,7 +9,7 @@ mod args;
 use args::parse_args;
 
 mod operator;
-use operator::{cat, clone, dir, list, make, remove, symlink, update};
+use operator::{cat, clone, dir, fork, list, make, remove, symlink, update};
 
 fn main() {
     match parse_args(
@@ -53,6 +53,13 @@ fn main() {
                                     flags.contains(&String::from("color")),
                                 ),
                                 "c" | "clone" => clone(
+                                    &osoy_path.join("packages"),
+                                    &osoy_path.join("bin"),
+                                    &words[1..],
+                                    flags.contains(&String::from("force")),
+                                    flags.contains(&String::from("defaults")),
+                                ),
+                                "f" | "fork" => fork(
                                     &osoy_path.join("packages"),
                                     &osoy_path.join("bin"),
                                     &words[1..],

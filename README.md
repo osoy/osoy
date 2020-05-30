@@ -38,16 +38,16 @@ This software relies on extended file metadata to determine whether a file is ex
 
 #### Operators
 
-    c|clone    <query*>  clone packages from GitHub, GitLab or Bitbucket
-    r|remove   <query*>  remove packages
-    l|list     [query*]  list (all) packages
-    m|make     [query*]  make (all) packages
-    s|symlink  [query*]  make packages' executables available in PATH
-    u|update   [query*]  update (all) packages
-
-    dir        <query>   print package's directory path
-    read       <query>   view package's README file
-    license    <query>   view package's LICENSE file
+    c|clone   <query*>        clone packages from GitHub, GitLab or Bitbucket
+    f|fork    <query> <fork>  clone a package overwriting remote origin to fork
+    r|remove  <query*>        remove packages
+    l|list    [query*]        list (all) packages
+    m|make    [query*]        make (all) packages
+    s|symlink [query*]        make packages' executables available in PATH
+    u|update  [query*]        update (all) packages
+    dir       <query>         print package's directory path
+    read      <query>         view package's README file
+    license   <query>         view package's LICENSE file
 
 #### Query syntax
 
@@ -133,4 +133,5 @@ Following line will make it easier to navigate to package's directory
 ## Todo
 
 - [x] option flag for make
-- [ ] fork operator
+- [x] fork operator
+- [ ] chain make prompt to update, clone & fork

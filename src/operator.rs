@@ -223,6 +223,80 @@ pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, de
     }
 }
 
+pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
+    if query.len() <= 0 {
+        println!("query and fork destination required");
+    } else if query.len() <= 1 {
+        println!("fork url required");
+    } else {
+        let q = &query[0];
+        let fork_dest = &query[1];
+        if let Some(url) = url_from_query(&q) {
+            if let Some(fork_url) = url_from_query(&fork_dest) {
+                let repo_id = Regex::new("^.*://")
+                    .unwrap()
+                    .replace(&fork_url, "")
+                    .to_lowercase();
+                let repo_path = pkg_path.join(&repo_id);
+                if !repo_path.exists()
+                    || force
+                    || (!defaults
+                        && prompt_no(&format!("package '{}' exists. overwrite?", repo_id)))
+                {
+                    if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
+                        match Command::new("git")
+                            .args(&["clone", &url, &repo_path.to_string_lossy()])
+                            .status()
+                        {
+                            Ok(result) => {
+                                if result.success() {
+                                    symlink(
+                                        pkg_path,
+                                        bin_path,
+                                        &[repo_id.clone()],
+                                        force,
+                                        defaults,
+                                    );
+                                    if set_current_dir(&repo_path).is_ok() {
+                                        println!("package cloned from '{}'", url);
+                                        match Command::new("git")
+                                            .args(&["remote", "rename", "origin", "upstream"])
+                                            .status()
+                                        {
+                                            Ok(_) => {}
+                                            Err(msg) => println!("error: {}", msg),
+                                        }
+                                        match Command::new("git")
+                                            .args(&["remote", "add", "origin", &fork_url])
+                                            .status()
+                                        {
+                                            Ok(result) => {
+                                                if result.success() {
+                                                    println!("added remote origin '{}'", fork_url);
+                                                }
+                                            }
+                                            Err(msg) => println!("error: {}", msg),
+                                        }
+                                    }
+                                } else {
+                                    println!("git clone failed");
+                                }
+                            }
+                            Err(msg) => println!("git clone failed to start '{}'", msg),
+                        }
+                    } else {
+                        println!("failed to remove package '{}'", repo_id);
+                    }
+                }
+            } else {
+                println!("couldn't build url from fork destination '{}'", fork_dest);
+            }
+        } else {
+            println!("couldn't build url from query '{}'", q);
+        }
+    }
+}
+
 pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
