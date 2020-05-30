@@ -132,3 +132,4 @@ Following line will make it easier to navigate to package's directory
 ## Todo
 
 - [ ] fork operator
+- [ ] option flag for make
