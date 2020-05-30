@@ -253,7 +253,14 @@ pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, d
     }
 }
 
-pub fn make(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
+pub fn make(
+    pkg_path: &Path,
+    bin_path: &Path,
+    query: &[String],
+    force: bool,
+    defaults: bool,
+    option: Option<&String>,
+) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
@@ -264,7 +271,14 @@ pub fn make(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, def
                 if set_current_dir(&repo).is_ok() {
                     if repo.join("Makefile").is_file() || repo.join("makefile").is_file() {
                         println!("{}", rel_path.display());
-                        match Command::new("make").status() {
+                        let mut cmd = Command::new("make");
+                        if let Some(option) = option {
+                            cmd.arg(option);
+                            println!("> make {}", option);
+                        } else {
+                            println!("> make");
+                        }
+                        match cmd.status() {
                             Ok(result) => {
                                 if result.success() {
                                     count += 1;

@@ -14,7 +14,7 @@ use operator::{cat, clone, dir, list, make, remove, symlink, update};
 fn main() {
     match parse_args(
         &args().collect::<Vec<String>>()[1..],
-        &[
+        [
             ("h", "help"),
             ("c", "color"),
             ("f", "force"),
@@ -29,10 +29,13 @@ fn main() {
         .iter()
         .cloned()
         .collect::<HashMap<&str, &str>>(),
-        &HashMap::new(),
+        [("o", "option"), ("option", "option")]
+            .iter()
+            .cloned()
+            .collect::<HashMap<&str, &str>>(),
     ) {
         Err(msg) => println!("{}", msg),
-        Ok((words, flags, _)) => {
+        Ok((words, flags, options)) => {
             if flags.contains(&String::from("help")) {
                 print_usage(flags.contains(&String::from("color")));
             } else if flags.contains(&String::from("version")) {
@@ -83,6 +86,7 @@ fn main() {
                                     &words[1..],
                                     flags.contains(&String::from("force")),
                                     flags.contains(&String::from("defaults")),
+                                    options.get("option"),
                                 ),
                                 "dir" => dir(&osoy_path.join("packages"), &words[1..]),
                                 "readme" => cat(

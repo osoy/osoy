@@ -17,11 +17,12 @@ operators:
   license    <query>   view package's LICENSE file
 
 flags:
-  -c --color     enable colors
-  -f --force     force prompts
-  -d --defaults  continue with prompt defaults
-  -h --help      show usage
-  -v --version   show version
+  -c --color      enable colors
+  -f --force      force prompts
+  -d --defaults   continue with prompt defaults
+  -h --help       show usage
+  -v --version    show version
+  -o --option <>  specify option to run make with
 
 query syntax: <[[domain/]author/]package> or <link>
   default domain is github.com & default author is <package>

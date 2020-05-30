@@ -57,11 +57,12 @@ Default domain is github.com & default author is `<package>`.
 
 #### Flags
 
-    -c --color     enable colors
-    -f --force     force prompts
-    -d --defaults  continue with prompt defaults
-    -h --help      show usage
-    -v --version   show version
+    -c --color      enable colors
+    -f --force      force prompts
+    -d --defaults   continue with prompt defaults
+    -h --help       show usage
+    -v --version    show version
+    -o --option <>  specify option to run make with
 
 ## Installation
 
@@ -131,5 +132,5 @@ Following line will make it easier to navigate to package's directory
 
 ## Todo
 
+- [x] option flag for make
 - [ ] fork operator
-- [ ] option flag for make
