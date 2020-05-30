@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::fs::remove_dir;
 use std::path::{Path, PathBuf};
 
 mod fsmeta;
@@ -55,12 +56,24 @@ pub fn get_repos(dir: &Path, prefix: &Path, query: &[String]) -> Vec<PathBuf> {
         }
     } else {
         if let Ok(entries) = dir.read_dir() {
+            let mut count = 0;
             for entry in entries {
+                count += 1;
                 if let Ok(entry) = entry {
                     let entry_path = entry.path();
                     if entry_path.is_dir() {
                         repos.append(&mut get_repos(&entry_path, prefix, &query));
                     }
+                }
+            }
+            if count == 0 {
+                if remove_dir(dir).is_ok() {
+                    println!("info: removed empty directory '{}'", dir.display());
+                } else {
+                    println!(
+                        "warning: couldn't remove empty directory '{}'",
+                        dir.display()
+                    );
                 }
             }
         }

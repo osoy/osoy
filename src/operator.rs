@@ -1,6 +1,6 @@
 use regex::Regex;
 use std::env::set_current_dir;
-use std::fs::{remove_dir_all, remove_file, File};
+use std::fs::{remove_dir, remove_dir_all, remove_file, File};
 use std::io::Read;
 use std::path::Path;
 use std::process::Command;
@@ -66,6 +66,28 @@ fn remove_orphan_links(bin_path: &Path) {
     println!("{} links removed", count);
 }
 
+fn remove_rec_if_empty(dir: &Path) {
+    if let Ok(entries) = dir.read_dir() {
+        let mut count = 0;
+        for _ in entries {
+            count += 1;
+        }
+        if count == 0 {
+            if remove_dir(dir).is_ok() {
+                println!("info: removed empty directory '{}'", dir.display());
+                let mut path_buf = dir.to_path_buf();
+                path_buf.pop();
+                remove_rec_if_empty(&path_buf);
+            } else {
+                println!(
+                    "warning: couldn't remove empty directory '{}'",
+                    dir.display()
+                );
+            }
+        }
+    }
+}
+
 pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
@@ -81,12 +103,14 @@ pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, d
         }
 
         if force || defaults || prompt_yes("proceed?") {
-            for repo in repos {
+            for mut repo in repos {
                 if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
                     match remove_dir_all(&repo) {
                         Ok(_) => {
                             count += 1;
                             println!("package '{}' removed", rel_path.display());
+                            repo.pop();
+                            remove_rec_if_empty(&repo);
                         }
                         Err(msg) => {
                             println!("failed to remove package '{}'\n{}", rel_path.display(), msg)
