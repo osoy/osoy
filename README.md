@@ -1,5 +1,5 @@
 <p align='center'>
-  <img alt='logo' src='./logo.svg' />
+  <img alt='logo' src='./logo.svg' height="64" />
 </p>
 <h1 align='center'>Osoy</h1>
 
