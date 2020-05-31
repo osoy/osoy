@@ -20,7 +20,7 @@ Inspired by
 - [Installation](#Installation)
 - [Configuration](#Configuration)
 - [File structure](#File-structure)
-- [Contributions](#Contributions)
+- [Todo](#Todo)
 
 ## Compatibility
 
@@ -134,4 +134,9 @@ Following line will make it easier to navigate to package's directory
 
 - [x] option flag for make
 - [x] fork operator
+- [ ] list current branches
+- [ ] quiet flag for less output
+- [ ] deny flag to deny all prompts
+- [ ] visual progress for update, clone & fork
+- [ ] asynchronous updating & cloning
 - [ ] chain make prompt to update, clone & fork
