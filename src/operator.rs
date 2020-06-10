@@ -1,14 +1,14 @@
 use regex::Regex;
 use std::env::set_current_dir;
-use std::fs::{remove_dir, remove_dir_all, remove_file, File};
+use std::fs::{remove_dir_all, remove_file, File};
 use std::io::Read;
 use std::path::Path;
 use std::process::Command;
 
 mod query;
 use query::{
-    create_symlink, get_branch, get_exes, get_first_file, get_links_to, get_orphan_links,
-    get_repos, url_from_query,
+    create_symlink, get_branch, get_exes, get_first_file, get_links_to, get_repos,
+    remove_orphan_links, remove_rec_if_empty, url_from_query,
 };
 
 mod prompt;
@@ -62,38 +62,6 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-fn remove_orphan_links(bin_path: &Path) {
-    let mut count = 0;
-    for link in get_orphan_links(bin_path) {
-        if remove_file(&link).is_ok() {
-            count += 1;
-        }
-    }
-    println!("{} links removed", count);
-}
-
-fn remove_rec_if_empty(dir: &Path) {
-    if let Ok(entries) = dir.read_dir() {
-        let mut count = 0;
-        for _ in entries {
-            count += 1;
-        }
-        if count == 0 {
-            if remove_dir(dir).is_ok() {
-                println!("info: removed empty directory '{}'", dir.display());
-                let mut path_buf = dir.to_path_buf();
-                path_buf.pop();
-                remove_rec_if_empty(&path_buf);
-            } else {
-                println!(
-                    "warning: couldn't remove empty directory '{}'",
-                    dir.display()
-                );
             }
         }
     }
@@ -188,6 +156,51 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answ
             }
         }
         println!("{} links created", count);
+    }
+}
+
+pub fn make(
+    pkg_path: &Path,
+    bin_path: &Path,
+    query: &[String],
+    answer: &Answer,
+    option: Option<&String>,
+) {
+    let mut count = 0;
+    let repos = get_repos(pkg_path, pkg_path, query);
+    if repos.len() <= 0 {
+        println!("no packages satisfy query '{}'", query.join(" "));
+    } else {
+        for repo in repos {
+            if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
+                if set_current_dir(&repo).is_ok() {
+                    if repo.join("Makefile").is_file() || repo.join("makefile").is_file() {
+                        println!("{}", rel_path.display());
+                        let mut cmd = Command::new("make");
+                        if let Some(option) = option {
+                            cmd.arg(option);
+                            println!("> make {}", option);
+                        } else {
+                            println!("> make");
+                        }
+                        match cmd.status() {
+                            Ok(result) => {
+                                if result.success() {
+                                    count += 1;
+                                } else {
+                                    println!("make failed");
+                                }
+                            }
+                            Err(msg) => println!("make failed '{}'", msg),
+                        }
+                    }
+                } else {
+                    println!("failed to access '{}'", repo.display());
+                }
+            }
+        }
+        symlink(pkg_path, bin_path, query, answer);
+        println!("{} packages built", count);
     }
 }
 
@@ -326,51 +339,6 @@ pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answe
         }
         symlink(pkg_path, bin_path, query, answer);
         println!("{} packages updated", count);
-    }
-}
-
-pub fn make(
-    pkg_path: &Path,
-    bin_path: &Path,
-    query: &[String],
-    answer: &Answer,
-    option: Option<&String>,
-) {
-    let mut count = 0;
-    let repos = get_repos(pkg_path, pkg_path, query);
-    if repos.len() <= 0 {
-        println!("no packages satisfy query '{}'", query.join(" "));
-    } else {
-        for repo in repos {
-            if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
-                if set_current_dir(&repo).is_ok() {
-                    if repo.join("Makefile").is_file() || repo.join("makefile").is_file() {
-                        println!("{}", rel_path.display());
-                        let mut cmd = Command::new("make");
-                        if let Some(option) = option {
-                            cmd.arg(option);
-                            println!("> make {}", option);
-                        } else {
-                            println!("> make");
-                        }
-                        match cmd.status() {
-                            Ok(result) => {
-                                if result.success() {
-                                    count += 1;
-                                } else {
-                                    println!("make failed");
-                                }
-                            }
-                            Err(msg) => println!("make failed '{}'", msg),
-                        }
-                    }
-                } else {
-                    println!("failed to access '{}'", repo.display());
-                }
-            }
-        }
-        symlink(pkg_path, bin_path, query, answer);
-        println!("{} packages built", count);
     }
 }
 

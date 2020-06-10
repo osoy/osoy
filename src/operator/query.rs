@@ -1,5 +1,5 @@
 use regex::Regex;
-use std::fs::{remove_dir, File};
+use std::fs::{remove_dir, remove_file, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
@@ -114,7 +114,7 @@ pub fn get_links_to(target: &Path, dir: &Path) -> Vec<PathBuf> {
     links
 }
 
-pub fn get_orphan_links(dir: &Path) -> Vec<PathBuf> {
+fn get_orphan_links(dir: &Path) -> Vec<PathBuf> {
     let mut links: Vec<PathBuf> = Vec::new();
     if let Ok(entries) = dir.read_dir() {
         for entry in entries {
@@ -129,6 +129,38 @@ pub fn get_orphan_links(dir: &Path) -> Vec<PathBuf> {
         }
     }
     links
+}
+
+pub fn remove_orphan_links(bin_path: &Path) {
+    let mut count = 0;
+    for link in get_orphan_links(bin_path) {
+        if remove_file(&link).is_ok() {
+            count += 1;
+        }
+    }
+    println!("{} links removed", count);
+}
+
+pub fn remove_rec_if_empty(dir: &Path) {
+    if let Ok(entries) = dir.read_dir() {
+        let mut count = 0;
+        for _ in entries {
+            count += 1;
+        }
+        if count == 0 {
+            if remove_dir(dir).is_ok() {
+                println!("info: removed empty directory '{}'", dir.display());
+                let mut path_buf = dir.to_path_buf();
+                path_buf.pop();
+                remove_rec_if_empty(&path_buf);
+            } else {
+                println!(
+                    "warning: couldn't remove empty directory '{}'",
+                    dir.display()
+                );
+            }
+        }
+    }
 }
 
 pub fn url_from_query(query: &str) -> Option<String> {
