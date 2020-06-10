@@ -7,8 +7,8 @@ use std::process::Command;
 
 mod query;
 use query::{
-    create_symlink, get_exes, get_first_file, get_links_to, get_orphan_links, get_repos,
-    url_from_query,
+    create_symlink, get_branch, get_exes, get_first_file, get_links_to, get_orphan_links,
+    get_repos, url_from_query,
 };
 
 mod prompt;
@@ -17,7 +17,17 @@ use prompt::{prompt_no, prompt_yes};
 pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
     for repo in get_repos(pkg_path, pkg_path, query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
-            println!("{}", rel_path.display());
+            print!("{}", rel_path.display());
+            if let Some(branch) = get_branch(&repo) {
+                if &branch != "master" {
+                    if color {
+                        print!(" \u{1b}[1m\u{1b}[33m{}\u{1b}[0m", branch);
+                    } else {
+                        print!(" {}", branch);
+                    }
+                }
+            }
+            println!();
 
             for exe in get_exes(&repo) {
                 if let Some(filename_os) = exe.file_name() {

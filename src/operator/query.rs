@@ -1,5 +1,6 @@
 use regex::Regex;
-use std::fs::remove_dir;
+use std::fs::{remove_dir, File};
+use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
 mod fsmeta;
@@ -168,6 +169,24 @@ pub fn get_first_file(dir: &Path, re: &str) -> Option<PathBuf> {
                 {
                     return Some(entry_path);
                 }
+            }
+        }
+    }
+    None
+}
+
+pub fn get_branch(dir: &Path) -> Option<String> {
+    let head = dir.join(".git/HEAD");
+    if head.is_file() {
+        let mut buffer = String::new();
+        if let Ok(f) = File::open(&head) {
+            if BufReader::new(f).read_line(&mut buffer).is_ok() {
+                return Some(
+                    Regex::new("^.*/([^/]+)$")
+                        .unwrap()
+                        .replace(buffer.trim_end(), "$1")
+                        .to_string(),
+                );
             }
         }
     }

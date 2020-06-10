@@ -134,7 +134,7 @@ Following line will make it easier to navigate to package's directory
 
 - [x] option flag for make
 - [x] fork operator
-- [ ] list current branches
+- [x] list current branches
 - [ ] quiet flag for less output
 - [ ] deny flag to deny all prompts
 - [ ] visual progress for update, clone & fork

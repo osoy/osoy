@@ -1,4 +1,4 @@
-osoy: src/*.rs src/**/*.rs
+osoy: src/*.rs src/**/*.rs Cargo.toml
 	cargo build --release
 	strip target/release/osoy
 
