@@ -40,11 +40,12 @@ This software relies on extended file metadata to determine whether a file is ex
 
     c|clone   <query*>        clone packages from GitHub, GitLab or Bitbucket
     f|fork    <query> <fork>  clone a package overwriting remote origin to fork
-    r|remove  <query*>        remove packages
     l|list    [query*]        list (all) packages
     m|make    [query*]        make (all) packages
+    r|remove  <query*>        remove packages
     s|symlink [query*]        make packages' executables available in PATH
     u|update  [query*]        update (all) packages
+
     dir       <query>         print package's directory path
     read      <query>         view package's README file
     license   <query>         view package's LICENSE file
@@ -58,10 +59,13 @@ Default domain is github.com & default author is `<package>`.
 #### Flags
 
     -c --color      enable colors
-    -f --force      force prompts
-    -d --defaults   continue with prompt defaults
     -h --help       show usage
     -v --version    show version
+
+    -f --force      force prompts
+    -y --defaults   continue with prompt defaults
+    -n --deny       deny prompts
+
     -o --option <>  specify option to run make with
 
 ## Installation
@@ -135,8 +139,8 @@ Following line will make it easier to navigate to package's directory
 - [x] option flag for make
 - [x] fork operator
 - [x] list current branches
+- [x] deny flag to deny all prompts
 - [ ] quiet flag for less output
-- [ ] deny flag to deny all prompts
 - [ ] visual progress for update, clone & fork
 - [ ] asynchronous updating & cloning
 - [ ] chain make prompt to update, clone & fork

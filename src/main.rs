@@ -9,7 +9,7 @@ mod args;
 use args::parse_args;
 
 mod operator;
-use operator::{cat, clone, dir, fork, list, make, remove, symlink, update};
+use operator::{cat, clone, dir, fork, list, make, remove, symlink, update, Answer};
 
 fn main() {
     match parse_args(
@@ -17,14 +17,16 @@ fn main() {
         [
             ("h", "help"),
             ("c", "color"),
-            ("f", "force"),
             ("v", "version"),
-            ("d", "defaults"),
             ("help", "help"),
             ("color", "color"),
-            ("force", "force"),
             ("version", "version"),
+            ("f", "force"),
+            ("y", "defaults"),
+            ("n", "deny"),
+            ("force", "force"),
             ("defaults", "defaults"),
+            ("deny", "deny"),
         ]
         .iter()
         .cloned()
@@ -44,71 +46,72 @@ fn main() {
                 if let Some(home) = home_dir() {
                     let osoy_path = home.join(".osoy");
                     if osoy_path.is_dir() {
-                        match words.get(0) {
-                            Some(operator) => match operator.as_str() {
-                                "l" | "list" => list(
-                                    &osoy_path.join("packages"),
-                                    &osoy_path.join("bin"),
-                                    &words[1..],
-                                    flags.contains(&String::from("color")),
-                                ),
-                                "c" | "clone" => clone(
-                                    &osoy_path.join("packages"),
-                                    &osoy_path.join("bin"),
-                                    &words[1..],
-                                    flags.contains(&String::from("force")),
-                                    flags.contains(&String::from("defaults")),
-                                ),
-                                "f" | "fork" => fork(
-                                    &osoy_path.join("packages"),
-                                    &osoy_path.join("bin"),
-                                    &words[1..],
-                                    flags.contains(&String::from("force")),
-                                    flags.contains(&String::from("defaults")),
-                                ),
-                                "r" | "remove" => remove(
-                                    &osoy_path.join("packages"),
-                                    &osoy_path.join("bin"),
-                                    &words[1..],
-                                    flags.contains(&String::from("force")),
-                                    flags.contains(&String::from("defaults")),
-                                ),
-                                "s" | "symlink" => symlink(
-                                    &osoy_path.join("packages"),
-                                    &osoy_path.join("bin"),
-                                    &words[1..],
-                                    flags.contains(&String::from("force")),
-                                    flags.contains(&String::from("defaults")),
-                                ),
-                                "u" | "update" => update(
-                                    &osoy_path.join("packages"),
-                                    &osoy_path.join("bin"),
-                                    &words[1..],
-                                    flags.contains(&String::from("force")),
-                                    flags.contains(&String::from("defaults")),
-                                ),
-                                "m" | "make" => make(
-                                    &osoy_path.join("packages"),
-                                    &osoy_path.join("bin"),
-                                    &words[1..],
-                                    flags.contains(&String::from("force")),
-                                    flags.contains(&String::from("defaults")),
-                                    options.get("option"),
-                                ),
-                                "dir" => dir(&osoy_path.join("packages"), &words[1..]),
-                                "readme" => cat(
-                                    &osoy_path.join("packages"),
-                                    &words[1..],
-                                    "(README|readme)(.md)?",
-                                ),
-                                "license" => cat(
-                                    &osoy_path.join("packages"),
-                                    &words[1..],
-                                    "(LICENSE|license)(.md)?",
-                                ),
-                                _ => println!("unknown operator '{}'", operator),
+                        match Answer::new(
+                            flags.contains(&String::from("force")),
+                            flags.contains(&String::from("defaults")),
+                            flags.contains(&String::from("deny")),
+                        ) {
+                            Ok(answer) => match words.get(0) {
+                                Some(operator) => match operator.as_str() {
+                                    "l" | "list" => list(
+                                        &osoy_path.join("packages"),
+                                        &osoy_path.join("bin"),
+                                        &words[1..],
+                                        flags.contains(&String::from("color")),
+                                    ),
+                                    "c" | "clone" => clone(
+                                        &osoy_path.join("packages"),
+                                        &osoy_path.join("bin"),
+                                        &words[1..],
+                                        &answer,
+                                    ),
+                                    "f" | "fork" => fork(
+                                        &osoy_path.join("packages"),
+                                        &osoy_path.join("bin"),
+                                        &words[1..],
+                                        &answer,
+                                    ),
+                                    "r" | "remove" => remove(
+                                        &osoy_path.join("packages"),
+                                        &osoy_path.join("bin"),
+                                        &words[1..],
+                                        &answer,
+                                    ),
+                                    "s" | "symlink" => symlink(
+                                        &osoy_path.join("packages"),
+                                        &osoy_path.join("bin"),
+                                        &words[1..],
+                                        &answer,
+                                    ),
+                                    "u" | "update" => update(
+                                        &osoy_path.join("packages"),
+                                        &osoy_path.join("bin"),
+                                        &words[1..],
+                                        &answer,
+                                    ),
+                                    "m" | "make" => make(
+                                        &osoy_path.join("packages"),
+                                        &osoy_path.join("bin"),
+                                        &words[1..],
+                                        &answer,
+                                        options.get("option"),
+                                    ),
+                                    "dir" => dir(&osoy_path.join("packages"), &words[1..]),
+                                    "readme" => cat(
+                                        &osoy_path.join("packages"),
+                                        &words[1..],
+                                        "(README|readme)(.md)?",
+                                    ),
+                                    "license" => cat(
+                                        &osoy_path.join("packages"),
+                                        &words[1..],
+                                        "(LICENSE|license)(.md)?",
+                                    ),
+                                    _ => println!("unknown operator '{}'", operator),
+                                },
+                                None => print_usage(flags.contains(&String::from("color"))),
                             },
-                            None => print_usage(flags.contains(&String::from("color"))),
+                            Err(msg) => println!("{}", msg),
                         }
                     } else {
                         println!("osoy directory not found")

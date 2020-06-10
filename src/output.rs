@@ -18,10 +18,11 @@ operators:
 
 flags:
   -c --color      enable colors
-  -f --force      force prompts
-  -d --defaults   continue with prompt defaults
   -h --help       show usage
   -v --version    show version
+  -f --force      force prompts
+  -y --defaults   continue with prompt defaults
+  -n --deny       deny prompts
   -o --option <>  specify option to run make with
 
 query syntax: <[[domain/]author/]package> or <link>

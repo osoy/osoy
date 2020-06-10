@@ -12,6 +12,7 @@ use query::{
 };
 
 mod prompt;
+pub use prompt::Answer;
 use prompt::{prompt_no, prompt_yes};
 
 pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
@@ -98,7 +99,7 @@ fn remove_rec_if_empty(dir: &Path) {
     }
 }
 
-pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
+pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
 
@@ -112,7 +113,7 @@ pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, d
             }
         }
 
-        if force || defaults || prompt_yes("proceed?") {
+        if prompt_yes("proceed?", answer) {
             for mut repo in repos {
                 if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
                     match remove_dir_all(&repo) {
@@ -134,7 +135,7 @@ pub fn remove(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, d
     }
 }
 
-pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
+pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer) {
     remove_orphan_links(bin_path);
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
@@ -148,9 +149,8 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, 
                         if get_links_to(&exe, bin_path).len() == 0 {
                             let link = bin_path.join(filename);
                             if !link.exists()
-                                || force
-                                || (!defaults
-                                    && prompt_no(&format!(
+                                || prompt_no(
+                                    &format!(
                                         "node '{}' exists. overwrite pointing to '{}'?",
                                         link.display(),
                                         if let Ok(rel_path) = exe.strip_prefix(pkg_path) {
@@ -158,7 +158,9 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, 
                                         } else {
                                             exe.display()
                                         }
-                                    )))
+                                    ),
+                                    answer,
+                                )
                             {
                                 if !link.exists() || remove_file(&link).is_ok() {
                                     match create_symlink(&exe, &link) {
@@ -189,7 +191,7 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, 
     }
 }
 
-pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
+pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer) {
     let mut cloned_ids: Vec<String> = Vec::new();
     if query.len() <= 0 {
         println!("query required");
@@ -202,9 +204,7 @@ pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, de
                     .to_lowercase();
                 let repo_path = pkg_path.join(&repo_id);
                 if !repo_path.exists()
-                    || force
-                    || (!defaults
-                        && prompt_no(&format!("package '{}' exists. overwrite?", repo_id)))
+                    || prompt_no(&format!("package '{}' exists. overwrite?", repo_id), answer)
                 {
                     if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
                         match Command::new("git")
@@ -228,12 +228,12 @@ pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, de
                 println!("couldn't build url from query '{}'", q);
             }
         }
-        symlink(pkg_path, bin_path, &cloned_ids, force, defaults);
+        symlink(pkg_path, bin_path, &cloned_ids, answer);
         println!("{} packages cloned", cloned_ids.len());
     }
 }
 
-pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
+pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer) {
     if query.len() <= 0 {
         println!("query and fork destination required");
     } else if query.len() <= 1 {
@@ -249,9 +249,7 @@ pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, def
                     .to_lowercase();
                 let repo_path = pkg_path.join(&repo_id);
                 if !repo_path.exists()
-                    || force
-                    || (!defaults
-                        && prompt_no(&format!("package '{}' exists. overwrite?", repo_id)))
+                    || prompt_no(&format!("package '{}' exists. overwrite?", repo_id), answer)
                 {
                     if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
                         match Command::new("git")
@@ -260,13 +258,7 @@ pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, def
                         {
                             Ok(result) => {
                                 if result.success() {
-                                    symlink(
-                                        pkg_path,
-                                        bin_path,
-                                        &[repo_id.clone()],
-                                        force,
-                                        defaults,
-                                    );
+                                    symlink(pkg_path, bin_path, &[repo_id.clone()], answer);
                                     if set_current_dir(&repo_path).is_ok() {
                                         println!("package cloned from '{}'", url);
                                         match Command::new("git")
@@ -307,7 +299,7 @@ pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, def
     }
 }
 
-pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, defaults: bool) {
+pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
@@ -332,7 +324,7 @@ pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], force: bool, d
                 }
             }
         }
-        symlink(pkg_path, bin_path, query, force, defaults);
+        symlink(pkg_path, bin_path, query, answer);
         println!("{} packages updated", count);
     }
 }
@@ -341,8 +333,7 @@ pub fn make(
     pkg_path: &Path,
     bin_path: &Path,
     query: &[String],
-    force: bool,
-    defaults: bool,
+    answer: &Answer,
     option: Option<&String>,
 ) {
     let mut count = 0;
@@ -378,7 +369,7 @@ pub fn make(
                 }
             }
         }
-        symlink(pkg_path, bin_path, query, force, defaults);
+        symlink(pkg_path, bin_path, query, answer);
         println!("{} packages built", count);
     }
 }
