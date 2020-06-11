@@ -140,7 +140,7 @@ Following line will make it easier to navigate to package's directory
 - [x] fork operator
 - [x] list current branches
 - [x] deny flag to deny all prompts
+- [x] chain make prompt to update, clone & fork
 - [ ] quiet flag for less output
 - [ ] visual progress for update, clone & fork
 - [ ] asynchronous updating & cloning
-- [ ] chain make prompt to update, clone & fork

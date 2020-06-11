@@ -7,7 +7,7 @@ use std::process::Command;
 
 mod query;
 use query::{
-    create_symlink, get_branch, get_exes, get_first_file, get_links_to, get_repos,
+    create_symlink, get_branch, get_exes, get_first_file, get_links_to, get_repos, has_makefile,
     remove_orphan_links, remove_rec_if_empty, url_from_query,
 };
 
@@ -164,7 +164,7 @@ pub fn make(
     bin_path: &Path,
     query: &[String],
     answer: &Answer,
-    option: Option<&String>,
+    option: &Option<&String>,
 ) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
@@ -174,7 +174,7 @@ pub fn make(
         for repo in repos {
             if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
                 if set_current_dir(&repo).is_ok() {
-                    if repo.join("Makefile").is_file() || repo.join("makefile").is_file() {
+                    if has_makefile(&repo) {
                         println!("{}", rel_path.display());
                         let mut cmd = Command::new("make");
                         if let Some(option) = option {
@@ -199,16 +199,23 @@ pub fn make(
                 }
             }
         }
-        symlink(pkg_path, bin_path, query, answer);
         println!("{} packages built", count);
+        symlink(pkg_path, bin_path, query, answer);
     }
 }
 
-pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer) {
-    let mut cloned_ids: Vec<String> = Vec::new();
+pub fn clone(
+    pkg_path: &Path,
+    bin_path: &Path,
+    query: &[String],
+    answer: &Answer,
+    option: &Option<&String>,
+) {
     if query.len() <= 0 {
         println!("query required");
     } else {
+        let mut cloned_ids: Vec<String> = Vec::new();
+        let mut have_makefiles = false;
         for q in query {
             if let Some(url) = url_from_query(&q) {
                 let repo_id = Regex::new("^.*://")
@@ -227,6 +234,9 @@ pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer
                             Ok(result) => {
                                 if result.success() {
                                     cloned_ids.push(String::from(repo_id));
+                                    if !have_makefiles {
+                                        have_makefiles = has_makefile(&repo_path)
+                                    }
                                 } else {
                                     println!("git clone failed");
                                 }
@@ -241,12 +251,22 @@ pub fn clone(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer
                 println!("couldn't build url from query '{}'", q);
             }
         }
-        symlink(pkg_path, bin_path, &cloned_ids, answer);
         println!("{} packages cloned", cloned_ids.len());
+        if have_makefiles && prompt_yes("make cloned packages?", answer) {
+            make(pkg_path, bin_path, &cloned_ids, answer, option);
+        } else {
+            symlink(pkg_path, bin_path, &cloned_ids, answer);
+        }
     }
 }
 
-pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer) {
+pub fn fork(
+    pkg_path: &Path,
+    bin_path: &Path,
+    query: &[String],
+    answer: &Answer,
+    option: &Option<&String>,
+) {
     if query.len() <= 0 {
         println!("query and fork destination required");
     } else if query.len() <= 1 {
@@ -271,7 +291,6 @@ pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer)
                         {
                             Ok(result) => {
                                 if result.success() {
-                                    symlink(pkg_path, bin_path, &[repo_id.clone()], answer);
                                     if set_current_dir(&repo_path).is_ok() {
                                         println!("package cloned from '{}'", url);
                                         match Command::new("git")
@@ -293,6 +312,19 @@ pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer)
                                             Err(msg) => println!("error: {}", msg),
                                         }
                                     }
+                                    if has_makefile(&repo_path)
+                                        && prompt_yes("make forked package?", answer)
+                                    {
+                                        make(
+                                            pkg_path,
+                                            bin_path,
+                                            &[repo_id.clone()],
+                                            answer,
+                                            option,
+                                        );
+                                    } else {
+                                        symlink(pkg_path, bin_path, &[repo_id.clone()], answer);
+                                    }
                                 } else {
                                     println!("git clone failed");
                                 }
@@ -312,8 +344,15 @@ pub fn fork(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer)
     }
 }
 
-pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer) {
-    let mut count = 0;
+pub fn update(
+    pkg_path: &Path,
+    bin_path: &Path,
+    query: &[String],
+    answer: &Answer,
+    option: &Option<&String>,
+) {
+    let mut cloned_ids: Vec<String> = Vec::new();
+    let mut have_makefiles = false;
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
         println!("no packages satisfy query '{}'", query.join(" "));
@@ -325,7 +364,10 @@ pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answe
                     match Command::new("git").arg("pull").status() {
                         Ok(result) => {
                             if result.success() {
-                                count += 1;
+                                cloned_ids.push(rel_path.to_string_lossy().to_string());
+                                if !have_makefiles {
+                                    have_makefiles = has_makefile(&repo)
+                                }
                             } else {
                                 println!("git pull failed");
                             }
@@ -337,8 +379,12 @@ pub fn update(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answe
                 }
             }
         }
-        symlink(pkg_path, bin_path, query, answer);
-        println!("{} packages updated", count);
+        println!("{} packages updated", &cloned_ids.len());
+        if have_makefiles && prompt_yes("make updated packages?", answer) {
+            make(pkg_path, bin_path, &cloned_ids, answer, option);
+        } else {
+            symlink(pkg_path, bin_path, &cloned_ids, answer);
+        }
     }
 }
 

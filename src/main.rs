@@ -46,6 +46,8 @@ fn main() {
                 if let Some(home) = home_dir() {
                     let osoy_path = home.join(".osoy");
                     if osoy_path.is_dir() {
+                        let color = flags.contains(&String::from("color"));
+                        let option = options.get("option");
                         match Answer::new(
                             flags.contains(&String::from("force")),
                             flags.contains(&String::from("defaults")),
@@ -57,19 +59,21 @@ fn main() {
                                         &osoy_path.join("packages"),
                                         &osoy_path.join("bin"),
                                         &words[1..],
-                                        flags.contains(&String::from("color")),
+                                        color,
                                     ),
                                     "c" | "clone" => clone(
                                         &osoy_path.join("packages"),
                                         &osoy_path.join("bin"),
                                         &words[1..],
                                         &answer,
+                                        &option,
                                     ),
                                     "f" | "fork" => fork(
                                         &osoy_path.join("packages"),
                                         &osoy_path.join("bin"),
                                         &words[1..],
                                         &answer,
+                                        &option,
                                     ),
                                     "r" | "remove" => remove(
                                         &osoy_path.join("packages"),
@@ -88,13 +92,14 @@ fn main() {
                                         &osoy_path.join("bin"),
                                         &words[1..],
                                         &answer,
+                                        &option,
                                     ),
                                     "m" | "make" => make(
                                         &osoy_path.join("packages"),
                                         &osoy_path.join("bin"),
                                         &words[1..],
                                         &answer,
-                                        options.get("option"),
+                                        &option,
                                     ),
                                     "dir" => dir(&osoy_path.join("packages"), &words[1..]),
                                     "readme" => cat(
@@ -109,7 +114,7 @@ fn main() {
                                     ),
                                     _ => println!("unknown operator '{}'", operator),
                                 },
-                                None => print_usage(flags.contains(&String::from("color"))),
+                                None => print_usage(color),
                             },
                             Err(msg) => println!("{}", msg),
                         }

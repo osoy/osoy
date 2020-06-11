@@ -224,3 +224,7 @@ pub fn get_branch(dir: &Path) -> Option<String> {
     }
     None
 }
+
+pub fn has_makefile(dir: &Path) -> bool {
+    dir.join("Makefile").is_file() || dir.join("makefile").is_file()
+}
