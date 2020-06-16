@@ -121,7 +121,8 @@ fn get_orphan_links(dir: &Path) -> Vec<PathBuf> {
             if let Ok(entry) = entry {
                 let entry_path = entry.path();
                 if is_symlink(&entry_path) {
-                    if !get_node_target(&entry_path).exists() {
+                    let target = get_node_target(&entry_path);
+                    if !is_exe(&target) {
                         links.push(entry_path)
                     }
                 }
