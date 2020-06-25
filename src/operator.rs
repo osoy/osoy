@@ -5,15 +5,12 @@ use std::io::Read;
 use std::path::Path;
 use std::process::Command;
 
-mod query;
-use query::{
+use crate::query::{
     create_symlink, get_branch, get_exes, get_first_file, get_links_to, get_repos, has_makefile,
     remove_orphan_links, remove_rec_if_empty, url_from_query,
 };
 
-mod prompt;
-pub use prompt::Answer;
-use prompt::{prompt_no, prompt_yes};
+use crate::prompt::{prompt_no, prompt_yes, Answer};
 
 pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
     for repo in get_repos(pkg_path, pkg_path, query) {

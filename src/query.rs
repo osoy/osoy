@@ -1,5 +1,5 @@
 use regex::Regex;
-use std::fs::{remove_dir, remove_file, File};
+use std::fs::{create_dir_all, remove_dir, remove_file, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
@@ -67,7 +67,7 @@ pub fn get_repos(dir: &Path, prefix: &Path, query: &[String]) -> Vec<PathBuf> {
                     }
                 }
             }
-            if count == 0 {
+            if count == 0 && dir != prefix {
                 if remove_dir(dir).is_ok() {
                     println!("info: removed empty directory '{}'", dir.display());
                 } else {
@@ -161,6 +161,15 @@ pub fn remove_rec_if_empty(dir: &Path) {
                 );
             }
         }
+    }
+}
+
+pub fn create_dir_if_absent(dir: &Path) {
+    if !create_dir_all(dir).is_ok() {
+        println!(
+            "warning: couldn't remove empty directory '{}'",
+            dir.display()
+        );
     }
 }
 
