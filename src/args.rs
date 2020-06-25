@@ -1,26 +1,26 @@
 use std::collections::HashMap;
 
-pub fn parse_args(
-    args: &[String],
-    valid_flags: HashMap<&str, &str>,
-    valid_opts: HashMap<&str, &str>,
-) -> Result<(Vec<String>, Vec<String>, HashMap<String, String>), String> {
+pub fn parse_args<'a>(
+    args: &'a [String],
+    valid_flags: HashMap<&'a str, &'a str>,
+    valid_opts: HashMap<&'a str, &'a str>,
+) -> Result<(Vec<String>, Vec<&'a str>, HashMap<&'a str, String>), String> {
     let mut words: Vec<String> = Vec::new();
-    let mut flags: Vec<String> = Vec::new();
-    let mut opts: HashMap<String, String> = HashMap::new();
-    let mut listener_opt = String::new();
+    let mut flags: Vec<&'a str> = Vec::new();
+    let mut opts: HashMap<&str, String> = HashMap::new();
+    let mut listener_opt: &str = "";
 
     for a in args {
         if !listener_opt.is_empty() {
-            opts.insert(listener_opt.clone(), String::from(a));
-            listener_opt.clear();
+            opts.insert(listener_opt.clone(), a.to_owned());
+            listener_opt = "";
         } else {
             if a.starts_with("--") {
                 let f = &a[2..];
                 if let Some(opt) = valid_opts.get(&f) {
-                    listener_opt = String::from(*opt);
+                    listener_opt = *opt;
                 } else if valid_flags.contains_key(&f) {
-                    flags.push(valid_flags.get(f).unwrap().to_string());
+                    flags.push(valid_flags.get(f).unwrap());
                 } else {
                     return Err(format!("unknown flag '--{}'", f));
                 }
@@ -28,15 +28,15 @@ pub fn parse_args(
                 for c in a.chars().skip(1) {
                     let f = &c.to_string();
                     if let Some(opt) = valid_opts.get(&f.as_str()) {
-                        listener_opt = String::from(*opt);
+                        listener_opt = *opt;
                     } else if valid_flags.contains_key(&f.as_str()) {
-                        flags.push(valid_flags.get(f.as_str()).unwrap().to_string());
+                        flags.push(valid_flags.get(f.as_str()).unwrap());
                     } else {
                         return Err(format!("unknown flag '-{}'", f));
                     }
                 }
             } else {
-                words.push(String::from(a));
+                words.push(a.to_owned());
             }
         }
     }

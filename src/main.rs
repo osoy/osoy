@@ -38,20 +38,20 @@ fn main() {
     ) {
         Err(msg) => println!("{}", msg),
         Ok((words, flags, options)) => {
-            if flags.contains(&String::from("help")) {
-                print_usage(flags.contains(&String::from("color")));
-            } else if flags.contains(&String::from("version")) {
+            if flags.contains(&"help") {
+                print_usage(flags.contains(&"color"));
+            } else if flags.contains(&"version") {
                 println!("{}", env!("CARGO_PKG_VERSION"));
             } else {
                 if let Some(home) = home_dir() {
                     let osoy_path = home.join(".osoy");
                     if osoy_path.is_dir() {
-                        let color = flags.contains(&String::from("color"));
+                        let color = flags.contains(&"color");
                         let option = options.get("option");
                         match Answer::new(
-                            flags.contains(&String::from("force")),
-                            flags.contains(&String::from("defaults")),
-                            flags.contains(&String::from("deny")),
+                            flags.contains(&"force"),
+                            flags.contains(&"defaults"),
+                            flags.contains(&"deny"),
                         ) {
                             Ok(answer) => match words.get(0) {
                                 Some(operator) => match operator.as_str() {
