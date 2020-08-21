@@ -174,7 +174,7 @@ pub fn create_dir_if_absent(dir: &Path) {
 }
 
 pub fn url_from_query(query: &str) -> Option<String> {
-    if query.find("://").is_some() {
+    if query.find("://").is_some() || query.find("@").is_some() {
         return Some(String::from(query));
     } else {
         let query = query.split("/").collect::<Vec<&str>>();
@@ -193,7 +193,7 @@ pub fn url_from_query(query: &str) -> Option<String> {
                 author = &name;
                 domain = "github.com";
             }
-            return Some(format!("https://{}/{}/{}", domain, author, name));
+            return Some(format!("git@{}:{}/{}.git", domain, author, name));
         }
     }
     None
