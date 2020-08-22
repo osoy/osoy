@@ -65,7 +65,7 @@ fn main() {
                         Ok(answer) => match words.get(0) {
                             Some(operator) => match operator.as_str() {
                                 "l" | "list" => list(&packages_dir, &bin_dir, &words[1..], color),
-                                "s" | "status" => status(&packages_dir, &words[1..]),
+                                "s" | "status" => status(&packages_dir, &words[1..], color),
                                 "c" | "clone" => {
                                     clone(&packages_dir, &bin_dir, &words[1..], &answer, &option)
                                 }

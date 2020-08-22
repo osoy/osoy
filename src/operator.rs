@@ -19,9 +19,9 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
             if let Some(branch) = get_branch(&repo) {
                 if &branch != "master" {
                     if color {
-                        print!(" \u{1b}[1m\u{1b}[33m{}\u{1b}[0m", branch);
+                        print!(" \u{1b}[1m\u{1b}[33m@{}\u{1b}[m", branch);
                     } else {
-                        print!(" {}", branch);
+                        print!(" @{}", branch);
                     }
                 }
             }
@@ -34,7 +34,7 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
 
                     if links.len() == 0 {
                         if color {
-                            println!("  \u{1b}[2m{}\u{1b}[0m", filename);
+                            println!("  \u{1b}[2m{}\u{1b}[m", filename);
                         } else {
                             println!("  {}", filename);
                         }
@@ -51,7 +51,7 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
                         }
                         if color {
                             println!(
-                                "  {} \u{1b}[2m<-\u{1b}[0m \u{1b}[1m\u{1b}[36m{}\u{1b}[0m",
+                                "  {} \u{1b}[2m<-\u{1b}[m \u{1b}[1m\u{1b}[36m{}\u{1b}[m",
                                 filename, link_list
                             );
                         } else {
@@ -156,7 +156,14 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answ
     }
 }
 
-pub fn status(pkg_path: &Path, query: &[String]) {
+enum GitStatusSection {
+    Description,
+    Staged,
+    Unstaged,
+    Untracked,
+}
+
+pub fn status(pkg_path: &Path, query: &[String], color: bool) {
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
         println!("no packages satisfy query '{}'", query.join(" "));
@@ -169,32 +176,88 @@ pub fn status(pkg_path: &Path, query: &[String]) {
                         Ok(output) => {
                             let out = String::from_utf8_lossy(&output.stdout);
                             let mut label = false;
-                            let mut untracked = false;
-                            // print branch if not master
+                            let mut section = GitStatusSection::Description;
                             // print unpublished commits and if diverged
-                            // add color
+                            if let Some(branch) = get_branch(&repo) {
+                                if &branch != "master" {
+                                    label = true;
+                                    if color {
+                                        println!(
+                                            "{} \u{1b}[1m\u{1b}[33m@{}\u{1b}[m",
+                                            rel_path.display(),
+                                            branch
+                                        );
+                                    } else {
+                                        println!("{} @{}", rel_path.display(), branch);
+                                    }
+                                }
+                            }
                             for line in out.lines() {
                                 if Regex::new("^\t").unwrap().is_match(&line) {
                                     if !label {
                                         label = true;
                                         println!("{}", rel_path.display());
                                     }
-                                    if untracked {
-                                        println!("  N: {}", line.trim_start_matches("\t"));
-                                    } else {
-                                        println!(
-                                            "{}",
-                                            Regex::new(r#"^\t+(\S)\S+:\s+(\S+)$"#)
-                                                .unwrap()
-                                                .replace(line, |caps: &Captures| format!(
-                                                    "  {}: {}",
-                                                    &caps[1].to_uppercase(),
-                                                    &caps[2]
-                                                ))
-                                        );
+                                    match section {
+                                        GitStatusSection::Staged | GitStatusSection::Unstaged => {
+                                            println!(
+                                                "{}",
+                                                Regex::new(r#"^\t+(\S)\S+:\s+(\S+)$"#)
+                                                    .unwrap()
+                                                    .replace(line, |caps: &Captures| {
+                                                        let op = match section {
+                                                            GitStatusSection::Staged => format!(
+                                                                "+{}",
+                                                                caps[1].to_uppercase()
+                                                            ),
+                                                            _ => format!(
+                                                                "-{}",
+                                                                caps[1].to_uppercase()
+                                                            ),
+                                                        };
+                                                        if color {
+                                                            match &caps[1] {
+                                                                "d" => format!(
+                                                                    "  \u{1b}[31m{}\u{1b}[m: {}",
+                                                                    op, &caps[2]
+                                                                ),
+                                                                "n" => {
+                                                                    format!(            
+                                                                    "  \u{1b}[32m{}\u{1b}[m: {}",
+                                                                    op, &caps[2]           
+                                                                )
+                                                                }
+                                                                _ => {
+                                                                    format!(              
+                                                                    "  \u{1b}[33m{}\u{1b}[m: {}",
+                                                                    op, &caps[2]
+                                                                )
+                                                                }
+                                                            }
+                                                        } else {
+                                                            format!("  {}: {}", op, &caps[2])
+                                                        }
+                                                    })
+                                            )
+                                        }
+                                        GitStatusSection::Untracked => {
+                                            if color {
+                                                println!(
+                                                    "  \u{1b}[32m-N\u{1b}[m: {}",
+                                                    line.trim_start_matches("\t")
+                                                )
+                                            } else {
+                                                println!("  n: {}", line.trim_start_matches("\t"))
+                                            }
+                                        }
+                                        _ => {}
                                     }
+                                } else if line == "Changes to be committed:" {
+                                    section = GitStatusSection::Staged;
+                                } else if line == "Changes not staged for commit:" {
+                                    section = GitStatusSection::Unstaged;
                                 } else if line == "Untracked files:" {
-                                    untracked = true;
+                                    section = GitStatusSection::Untracked;
                                 }
                             }
                             if label {
