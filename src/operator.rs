@@ -1,4 +1,3 @@
-use regex::Regex;
 use std::env::set_current_dir;
 use std::fs::{remove_dir_all, remove_file, File};
 use std::io::Read;
@@ -7,7 +6,7 @@ use std::process::Command;
 
 use crate::query::{
     create_symlink, get_branch, get_exes, get_first_file, get_links_to, get_repos, has_makefile,
-    remove_orphan_links, remove_rec_if_empty, url_from_query,
+    remove_orphan_links, remove_rec_if_empty, repo_id_from_url, url_from_query,
 };
 
 use crate::prompt::{prompt_no, prompt_yes, Answer};
@@ -215,10 +214,7 @@ pub fn clone(
         let mut have_makefiles = false;
         for q in query {
             if let Some(url) = url_from_query(&q) {
-                let repo_id = Regex::new("^.*://")
-                    .unwrap()
-                    .replace(&url, "")
-                    .to_lowercase();
+                let repo_id = repo_id_from_url(&url).unwrap();
                 let repo_path = pkg_path.join(&repo_id);
                 if !repo_path.exists()
                     || prompt_no(&format!("package '{}' exists. overwrite?", repo_id), answer)
@@ -273,10 +269,7 @@ pub fn fork(
         let fork_dest = &query[1];
         if let Some(url) = url_from_query(&q) {
             if let Some(fork_url) = url_from_query(&fork_dest) {
-                let repo_id = Regex::new("^.*://")
-                    .unwrap()
-                    .replace(&fork_url, "")
-                    .to_lowercase();
+                let repo_id = repo_id_from_url(&url).unwrap();
                 let repo_path = pkg_path.join(&repo_id);
                 if !repo_path.exists()
                     || prompt_no(&format!("package '{}' exists. overwrite?", repo_id), answer)
@@ -337,6 +330,55 @@ pub fn fork(
             }
         } else {
             println!("couldn't build url from query '{}'", q);
+        }
+    }
+}
+
+pub fn new(pkg_path: &Path, query: &[String], answer: &Answer) {
+    if query.len() <= 0 {
+        println!("destination required");
+    } else {
+        for q in query {
+            if let Some(url) = url_from_query(&q) {
+                let repo_id = repo_id_from_url(&url).unwrap();
+                let repo_path = pkg_path.join(&repo_id);
+                if !repo_path.exists()
+                    || prompt_no(&format!("package '{}' exists. overwrite?", repo_id), answer)
+                {
+                    if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
+                        match Command::new("git")
+                            .args(&["init", &repo_path.to_string_lossy()])
+                            .status()
+                        {
+                            Ok(result) => {
+                                if result.success() {
+                                    if set_current_dir(&repo_path).is_ok() {
+                                        println!("package created at '{}'", repo_id);
+                                        match Command::new("git")
+                                            .args(&["remote", "add", "origin", &url])
+                                            .status()
+                                        {
+                                            Ok(result) => {
+                                                if result.success() {
+                                                    println!("added remote origin '{}'", url);
+                                                }
+                                            }
+                                            Err(msg) => println!("error: {}", msg),
+                                        }
+                                    }
+                                } else {
+                                    println!("git init failed");
+                                }
+                            }
+                            Err(msg) => println!("git init failed to start '{}'", msg),
+                        }
+                    } else {
+                        println!("failed to remove package '{}'", repo_id);
+                    }
+                }
+            } else {
+                println!("couldn't build url from query '{}'", q);
+            }
         }
     }
 }

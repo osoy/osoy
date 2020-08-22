@@ -43,6 +43,7 @@ This software relies on extended file metadata to determine whether a file is ex
     l|list    [query*]        list (all) packages
     m|make    [query*]        make (all) packages
     r|remove  <query*>        remove packages
+    n|new     <query>...      create new empty packages
     s|symlink [query*]        make packages' executables available in PATH
     u|update  [query*]        update (all) packages
 

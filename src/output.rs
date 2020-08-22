@@ -8,6 +8,7 @@ operators:
   c|clone   <query>...      clone packages from a git hosting domain
   f|fork    <query> <fork>  clone a package overwriting remote origin to fork
   r|remove  <query>...      remove packages
+  n|new     <query>...      create new empty packages
   l|list    [query]...      list (all) packages
   m|make    [query]...      make (all) packages
   s|symlink [query]...      link packages' executables to PATH

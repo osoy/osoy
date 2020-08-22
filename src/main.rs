@@ -15,7 +15,7 @@ mod args;
 use args::parse_args;
 
 mod operator;
-use operator::{cat, clone, dir, fork, list, make, remove, symlink, update};
+use operator::{cat, clone, dir, fork, list, make, new, remove, symlink, update};
 
 fn main() {
     match parse_args(
@@ -74,6 +74,7 @@ fn main() {
                                 "r" | "remove" => {
                                     remove(&packages_dir, &bin_dir, &words[1..], &answer)
                                 }
+                                "n" | "new" => new(&packages_dir, &words[1..], &answer),
                                 "s" | "symlink" => {
                                     symlink(&packages_dir, &bin_dir, &words[1..], &answer)
                                 }

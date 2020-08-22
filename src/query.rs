@@ -1,4 +1,4 @@
-use regex::Regex;
+use regex::{Captures, Regex};
 use std::fs::{create_dir_all, remove_dir, remove_file, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
@@ -193,10 +193,37 @@ pub fn url_from_query(query: &str) -> Option<String> {
                 author = &name;
                 domain = "github.com";
             }
-            return Some(format!("git@{}:{}/{}.git", domain, author, name));
+            if domain.len() > 0 && author.len() > 0 && name.len() > 0 {
+                return Some(format!("git@{}:{}/{}.git", domain, author, name));
+            }
         }
     }
     None
+}
+
+pub fn repo_id_from_url(url: &str) -> Option<String> {
+    match {
+        if url.find("://").is_some() {
+            Some(
+                Regex::new("^.*://")
+                    .unwrap()
+                    .replace(&url, "")
+                    .to_lowercase(),
+            )
+        } else if url.find("@").is_some() {
+            Some(
+                Regex::new("^.*@([^:]+):")
+                    .unwrap()
+                    .replace(&url, |caps: &Captures| format!("{}/", &caps[1]))
+                    .to_lowercase(),
+            )
+        } else {
+            None
+        }
+    } {
+        Some(id) => Some(id.strip_suffix(".git").unwrap_or(&id).to_owned()),
+        None => None,
+    }
 }
 
 pub fn get_first_file(dir: &Path, re: &str) -> Option<PathBuf> {
@@ -237,4 +264,43 @@ pub fn get_branch(dir: &Path) -> Option<String> {
 
 pub fn has_makefile(dir: &Path) -> bool {
     dir.join("Makefile").is_file() || dir.join("makefile").is_file()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn query_to_url() {
+        let url = url_from_query("osoy");
+        assert_eq!(url, Some("git@github.com:osoy/osoy.git".to_owned()));
+        let url = url_from_query("rasmusmerzin/colo");
+        assert_eq!(url, Some("git@github.com:rasmusmerzin/colo.git".to_owned()));
+
+        let url = url_from_query("https://github.com/osoy/osoy");
+        assert_eq!(url, Some("https://github.com/osoy/osoy".to_owned()));
+        let url = url_from_query("git@gitlab.com:osoy/osoy");
+        assert_eq!(url, Some("git@gitlab.com:osoy/osoy".to_owned()));
+
+        let url = url_from_query("");
+        assert_eq!(url, None);
+        let url = url_from_query("github.com//osoy");
+        assert_eq!(url, None);
+    }
+
+    #[test]
+    fn url_to_repo_id() {
+        let repo_id = repo_id_from_url("https://github.com/osoy/osoy.git");
+        assert_eq!(repo_id, Some("github.com/osoy/osoy".to_owned()));
+        let repo_id = repo_id_from_url("git@gitlab.com:osoy/osoy.git");
+        assert_eq!(repo_id, Some("gitlab.com/osoy/osoy".to_owned()));
+
+        let repo_id = repo_id_from_url("git@gitlab.com:osoy/osoy");
+        assert_eq!(repo_id, Some("gitlab.com/osoy/osoy".to_owned()));
+
+        let repo_id = repo_id_from_url("gitlab.com/osoy/osoy");
+        assert_eq!(repo_id, None);
+        let repo_id = repo_id_from_url("");
+        assert_eq!(repo_id, None);
+    }
 }
