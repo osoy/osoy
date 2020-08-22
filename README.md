@@ -38,14 +38,15 @@ This software relies on extended file metadata to determine whether a file is ex
 
 #### Operators
 
-    c|clone   <query*>        clone packages from GitHub, GitLab or Bitbucket
+    c|clone   <query>...      clone packages from GitHub, GitLab or Bitbucket
     f|fork    <query> <fork>  clone a package overwriting remote origin to fork
-    l|list    [query*]        list (all) packages
-    m|make    [query*]        make (all) packages
-    r|remove  <query*>        remove packages
+    y|symlink [query]...      make packages' executables available in PATH
+    l|list    [query]...      list (all) packages
+    s|status  [query]...      show status of (all) packages
+    m|make    [query]...      make (all) packages
+    r|remove  <query>...      remove packages
     n|new     <query>...      create new empty packages
-    s|symlink [query*]        make packages' executables available in PATH
-    u|update  [query*]        update (all) packages
+    u|update  [query]...      update (all) packages
 
     dir       <query>         print package's directory path
     read      <query>         view package's README file

@@ -15,7 +15,7 @@ mod args;
 use args::parse_args;
 
 mod operator;
-use operator::{cat, clone, dir, fork, list, make, new, remove, symlink, update};
+use operator::{cat, clone, dir, fork, list, make, new, remove, status, symlink, update};
 
 fn main() {
     match parse_args(
@@ -65,6 +65,7 @@ fn main() {
                         Ok(answer) => match words.get(0) {
                             Some(operator) => match operator.as_str() {
                                 "l" | "list" => list(&packages_dir, &bin_dir, &words[1..], color),
+                                "s" | "status" => status(&packages_dir, &words[1..]),
                                 "c" | "clone" => {
                                     clone(&packages_dir, &bin_dir, &words[1..], &answer, &option)
                                 }
@@ -75,7 +76,7 @@ fn main() {
                                     remove(&packages_dir, &bin_dir, &words[1..], &answer)
                                 }
                                 "n" | "new" => new(&packages_dir, &words[1..], &answer),
-                                "s" | "symlink" => {
+                                "y" | "symlink" => {
                                     symlink(&packages_dir, &bin_dir, &words[1..], &answer)
                                 }
                                 "u" | "update" => {

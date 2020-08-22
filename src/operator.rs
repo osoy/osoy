@@ -1,3 +1,4 @@
+use regex::{Captures, Regex};
 use std::env::set_current_dir;
 use std::fs::{remove_dir_all, remove_file, File};
 use std::io::Read;
@@ -152,6 +153,62 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answ
             }
         }
         println!("{} links created", count);
+    }
+}
+
+pub fn status(pkg_path: &Path, query: &[String]) {
+    let repos = get_repos(pkg_path, pkg_path, query);
+    if repos.len() <= 0 {
+        println!("no packages satisfy query '{}'", query.join(" "));
+    } else {
+        let mut clean = true;
+        for repo in repos {
+            if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
+                if set_current_dir(&repo).is_ok() {
+                    match Command::new("git").arg("status").output() {
+                        Ok(output) => {
+                            let out = String::from_utf8_lossy(&output.stdout);
+                            let mut label = false;
+                            let mut untracked = false;
+                            // print branch if not master
+                            // print unpublished commits and if diverged
+                            // add color
+                            for line in out.lines() {
+                                if Regex::new("^\t").unwrap().is_match(&line) {
+                                    if !label {
+                                        label = true;
+                                        println!("{}", rel_path.display());
+                                    }
+                                    if untracked {
+                                        println!("  N: {}", line.trim_start_matches("\t"));
+                                    } else {
+                                        println!(
+                                            "{}",
+                                            Regex::new(r#"^\t+(\S)\S+:\s+(\S+)$"#)
+                                                .unwrap()
+                                                .replace(line, |caps: &Captures| format!(
+                                                    "  {}: {}",
+                                                    &caps[1].to_uppercase(),
+                                                    &caps[2]
+                                                ))
+                                        );
+                                    }
+                                } else if line == "Untracked files:" {
+                                    untracked = true;
+                                }
+                            }
+                            if label {
+                                clean = false;
+                            }
+                        }
+                        Err(_) => println!("git status failed"),
+                    }
+                }
+            }
+        }
+        if clean {
+            println!("all clean");
+        }
     }
 }
 
