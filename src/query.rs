@@ -194,7 +194,7 @@ pub fn url_from_query(query: &str) -> Option<String> {
                 domain = "github.com";
             }
             if domain.len() > 0 && author.len() > 0 && name.len() > 0 {
-                return Some(format!("git@{}:{}/{}.git", domain, author, name));
+                return Some(format!("https://{}/{}/{}.git", domain, author, name));
             }
         }
     }
@@ -273,9 +273,12 @@ mod tests {
     #[test]
     fn query_to_url() {
         let url = url_from_query("osoy");
-        assert_eq!(url, Some("git@github.com:osoy/osoy.git".to_owned()));
+        assert_eq!(url, Some("https://github.com/osoy/osoy.git".to_owned()),);
         let url = url_from_query("rasmusmerzin/colo");
-        assert_eq!(url, Some("git@github.com:rasmusmerzin/colo.git".to_owned()));
+        assert_eq!(
+            url,
+            Some("https://github.com/rasmusmerzin/colo.git".to_owned())
+        );
 
         let url = url_from_query("https://github.com/osoy/osoy");
         assert_eq!(url, Some("https://github.com/osoy/osoy".to_owned()));
