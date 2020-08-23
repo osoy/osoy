@@ -177,7 +177,8 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                             let out = String::from_utf8_lossy(&output.stdout);
                             let mut label = false;
                             let mut section = GitStatusSection::Description;
-                            // print unpublished commits and if diverged
+                            // check if remote branch set
+
                             if let Some(branch) = get_branch(&repo) {
                                 if &branch != "master" {
                                     label = true;
@@ -192,6 +193,33 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                                     }
                                 }
                             }
+
+                            if let Some(caps) = Regex::new(
+                                r#"Your branch is ahead of '([^\n']+)' by ([0-9]+) commit"#,
+                            )
+                            .unwrap()
+                            .captures(&out)
+                            {
+                                println!("  {:>2}: commits ahead of '{}'", &caps[2], &caps[1]);
+                            } else if let Some(caps) = Regex::new(
+                                r#"Your branch is behind '([^\n']+)' by ([0-9]+) commit"#,
+                            )
+                            .unwrap()
+                            .captures(&out)
+                            {
+                                println!("  {:>2}: commits behind '{}'", &caps[2], &caps[1]);
+                            } else if let Some(caps) = Regex::new(
+                                "Your branch and '([^\n']+)' have diverged,\nand have ([0-9]+) and ([0-9]+) different commits each, respectively",
+                            )
+                            .unwrap().captures(&out) {
+                                println!(
+                                    "  {:>2}: commits ahead &\n  {:>2}: commits behind '{}'",
+                                    caps[2].to_owned(),
+                                    caps[3].to_owned(),
+                                    caps[1].to_owned()
+                                );
+                            }
+
                             for line in out.lines() {
                                 if Regex::new("^\t").unwrap().is_match(&line) {
                                     if !label {
