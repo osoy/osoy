@@ -177,7 +177,6 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                             let out = String::from_utf8_lossy(&output.stdout);
                             let mut label = false;
                             let mut section = GitStatusSection::Description;
-                            // check if remote branch set
 
                             if let Some(branch) = get_branch(&repo) {
                                 if &branch != "master" {
@@ -194,30 +193,42 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                                 }
                             }
 
-                            if let Some(caps) = Regex::new(
-                                r#"Your branch is ahead of '([^\n']+)' by ([0-9]+) commit"#,
-                            )
-                            .unwrap()
-                            .captures(&out)
+                            if !Regex::new("Your branch is up to date")
+                                .unwrap()
+                                .is_match(&out)
                             {
-                                println!("  {:>2}: commits ahead of '{}'", &caps[2], &caps[1]);
-                            } else if let Some(caps) = Regex::new(
-                                r#"Your branch is behind '([^\n']+)' by ([0-9]+) commit"#,
-                            )
-                            .unwrap()
-                            .captures(&out)
-                            {
-                                println!("  {:>2}: commits behind '{}'", &caps[2], &caps[1]);
-                            } else if let Some(caps) = Regex::new(
-                                "Your branch and '([^\n']+)' have diverged,\nand have ([0-9]+) and ([0-9]+) different commits each, respectively",
-                            )
-                            .unwrap().captures(&out) {
-                                println!(
-                                    "  {:>2}: commits ahead &\n  {:>2}: commits behind '{}'",
-                                    caps[2].to_owned(),
-                                    caps[3].to_owned(),
-                                    caps[1].to_owned()
-                                );
+                                if !label {
+                                    label = true;
+                                    println!("{}", rel_path.display());
+                                }
+
+                                if let Some(caps) = Regex::new(
+                                    r#"Your branch is ahead of '([^\n']+)' by ([0-9]+) commit"#,
+                                )
+                                .unwrap()
+                                .captures(&out)
+                                {
+                                    println!("  {:>2}: commits ahead of '{}'", &caps[2], &caps[1]);
+                                } else if let Some(caps) = Regex::new(
+                                    r#"Your branch is behind '([^\n']+)' by ([0-9]+) commit"#,
+                                )
+                                .unwrap()
+                                .captures(&out)
+                                {
+                                    println!("  {:>2}: commits behind '{}'", &caps[2], &caps[1]);
+                                } else if let Some(caps) = Regex::new(
+                                    "Your branch and '([^\n']+)' have diverged,\nand have ([0-9]+) and ([0-9]+) different commits each, respectively",
+                                )
+                                .unwrap().captures(&out) {
+                                    println!(
+                                        "  {:>2}: commits ahead &\n  {:>2}: commits behind '{}'",
+                                        caps[2].to_owned(),
+                                        caps[3].to_owned(),
+                                        caps[1].to_owned()
+                                    );
+                                } else {
+                                    println!("  no upstream branch set");
+                                }
                             }
 
                             for line in out.lines() {
@@ -275,7 +286,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                                                     line.trim_start_matches("\t")
                                                 )
                                             } else {
-                                                println!("  n: {}", line.trim_start_matches("\t"))
+                                                println!("  -N: {}", line.trim_start_matches("\t"))
                                             }
                                         }
                                         _ => {}
@@ -292,7 +303,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                                 clean = false;
                             }
                         }
-                        Err(_) => println!("git status failed"),
+                        Err(_) => println!("{}\n  git status failed", rel_path.display()),
                     }
                 }
             }
