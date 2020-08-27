@@ -6,7 +6,9 @@ use std::process::Command;
 
 use crate::query::{
     create_symlink, get_branch, get_exes, get_first_file, get_links_to, get_repos, has_makefile,
-    remove_orphan_links, remove_rec_if_empty, repo_id_from_url, url_from_query,
+    remove_orphan_links, remove_rec_if_empty, repo_id_from_url,
+    status::{get_status, GitAction},
+    url_from_query,
 };
 
 use crate::prompt::{prompt_no, prompt_yes, Answer};
@@ -18,9 +20,9 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
             if let Some(branch) = get_branch(&repo) {
                 if &branch != "master" {
                     if color {
-                        print!(" \u{1b}[1m\u{1b}[33m{}\u{1b}[0m", branch);
+                        print!(" \u{1b}[1m\u{1b}[33m@{}\u{1b}[m", branch);
                     } else {
-                        print!(" {}", branch);
+                        print!(" @{}", branch);
                     }
                 }
             }
@@ -33,7 +35,7 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
 
                     if links.len() == 0 {
                         if color {
-                            println!("  \u{1b}[2m{}\u{1b}[0m", filename);
+                            println!("  \u{1b}[2m{}\u{1b}[m", filename);
                         } else {
                             println!("  {}", filename);
                         }
@@ -50,7 +52,7 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool) {
                         }
                         if color {
                             println!(
-                                "  {} \u{1b}[2m<-\u{1b}[0m \u{1b}[1m\u{1b}[36m{}\u{1b}[0m",
+                                "  {} \u{1b}[2m<-\u{1b}[m \u{1b}[1m\u{1b}[36m{}\u{1b}[m",
                                 filename, link_list
                             );
                         } else {
@@ -152,6 +154,110 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answ
             }
         }
         println!("{} links created", count);
+    }
+}
+
+pub fn status(pkg_path: &Path, query: &[String], color: bool) {
+    let repos = get_repos(pkg_path, pkg_path, query);
+    if repos.len() <= 0 {
+        println!("no packages satisfy query '{}'", query.join(" "));
+    } else {
+        let mut output = String::new();
+
+        for repo in repos {
+            if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
+                if let Some(info) = get_status(&repo) {
+                    let mut header = false;
+
+                    if let Some(branch) = info.branch {
+                        if &branch != "master" {
+                            header = true;
+                            output.push_str(&rel_path.to_string_lossy());
+                            if color {
+                                output
+                                    .push_str(&format!(" \u{1b}[1m\u{1b}[33m@{}\u{1b}[m", branch));
+                            } else {
+                                output.push_str(&format!(" @{}", branch));
+                            }
+                        }
+                    }
+
+                    if header || info.commits_ahead > 0 || info.commits_behind > 0 {
+                        if !header {
+                            header = true;
+                            output.push_str(&rel_path.to_string_lossy());
+                        }
+                        output.push_str(&format!(
+                            " [{}:{}]",
+                            info.commits_ahead, info.commits_behind
+                        ));
+                    }
+
+                    if let Some(upstream) = info.upstream {
+                        if upstream != "origin/master" {
+                            if !header {
+                                header = true;
+                                output.push_str(&rel_path.to_string_lossy());
+                            }
+                            output.push_str(&format!(" ({})", upstream));
+                        }
+                    } else {
+                        if !header {
+                            header = true;
+                            output.push_str(&rel_path.to_string_lossy());
+                        }
+                        output.push_str(" (no remote)");
+                    }
+
+                    if header {
+                        output.push('\n');
+                    }
+
+                    for file in info.files {
+                        if color {
+                            output.push_str(&format!(
+                                "  {}{}: {}\n",
+                                match file.staged {
+                                    true => "\u{1b}[1m+",
+                                    false => "-",
+                                },
+                                match file.action {
+                                    GitAction::Delete => "\u{1b}[31mD\u{1b}[m",
+                                    GitAction::New => "\u{1b}[32mN\u{1b}[m",
+                                    GitAction::Modify => "\u{1b}[33mM\u{1b}[m",
+                                },
+                                file.location
+                            ));
+                        } else {
+                            output.push_str(&format!(
+                                "  {}{}: {}\n",
+                                match file.staged {
+                                    true => "+",
+                                    false => "-",
+                                },
+                                match file.action {
+                                    GitAction::Delete => "D",
+                                    GitAction::New => "N",
+                                    GitAction::Modify => "M",
+                                },
+                                file.location
+                            ));
+                        }
+                    }
+                } else {
+                    output.push_str(&format!(
+                        "{}\n  error reading git status\n",
+                        rel_path.display()
+                    ));
+                }
+            }
+        }
+
+        if output.is_empty() {
+            println!("all clean");
+        } else {
+            print!("{}", output);
+        }
     }
 }
 
