@@ -1,4 +1,3 @@
-use regex::{Captures, Regex};
 use std::env::set_current_dir;
 use std::fs::{remove_dir_all, remove_file, File};
 use std::io::Read;
@@ -7,7 +6,9 @@ use std::process::Command;
 
 use crate::query::{
     create_symlink, get_branch, get_exes, get_first_file, get_links_to, get_repos, has_makefile,
-    remove_orphan_links, remove_rec_if_empty, repo_id_from_url, url_from_query,
+    remove_orphan_links, remove_rec_if_empty, repo_id_from_url,
+    status::{get_status, GitAction},
+    url_from_query,
 };
 
 use crate::prompt::{prompt_no, prompt_yes, Answer};
@@ -156,160 +157,106 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answ
     }
 }
 
-enum GitStatusSection {
-    Description,
-    Staged,
-    Unstaged,
-    Untracked,
-}
-
 pub fn status(pkg_path: &Path, query: &[String], color: bool) {
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
         println!("no packages satisfy query '{}'", query.join(" "));
     } else {
-        let mut clean = true;
+        let mut output = String::new();
+
         for repo in repos {
             if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
-                if set_current_dir(&repo).is_ok() {
-                    match Command::new("git").arg("status").output() {
-                        Ok(output) => {
-                            let out = String::from_utf8_lossy(&output.stdout);
-                            let mut label = false;
-                            let mut section = GitStatusSection::Description;
+                if let Some(info) = get_status(&repo) {
+                    let mut header = false;
 
-                            if let Some(branch) = get_branch(&repo) {
-                                if &branch != "master" {
-                                    label = true;
-                                    if color {
-                                        println!(
-                                            "{} \u{1b}[1m\u{1b}[33m@{}\u{1b}[m",
-                                            rel_path.display(),
-                                            branch
-                                        );
-                                    } else {
-                                        println!("{} @{}", rel_path.display(), branch);
-                                    }
-                                }
-                            }
-
-                            if !Regex::new("Your branch is up to date")
-                                .unwrap()
-                                .is_match(&out)
-                            {
-                                if !label {
-                                    label = true;
-                                    println!("{}", rel_path.display());
-                                }
-
-                                if let Some(caps) = Regex::new(
-                                    r#"Your branch is ahead of '([^\n']+)' by ([0-9]+) commit"#,
-                                )
-                                .unwrap()
-                                .captures(&out)
-                                {
-                                    println!("  {:>2}: commits ahead of '{}'", &caps[2], &caps[1]);
-                                } else if let Some(caps) = Regex::new(
-                                    r#"Your branch is behind '([^\n']+)' by ([0-9]+) commit"#,
-                                )
-                                .unwrap()
-                                .captures(&out)
-                                {
-                                    println!("  {:>2}: commits behind '{}'", &caps[2], &caps[1]);
-                                } else if let Some(caps) = Regex::new(
-                                    "Your branch and '([^\n']+)' have diverged,\nand have ([0-9]+) and ([0-9]+) different commits each, respectively",
-                                )
-                                .unwrap().captures(&out) {
-                                    println!(
-                                        "  {:>2}: commits ahead &\n  {:>2}: commits behind '{}'",
-                                        caps[2].to_owned(),
-                                        caps[3].to_owned(),
-                                        caps[1].to_owned()
-                                    );
-                                } else {
-                                    println!("  no upstream branch set");
-                                }
-                            }
-
-                            for line in out.lines() {
-                                if Regex::new("^\t").unwrap().is_match(&line) {
-                                    if !label {
-                                        label = true;
-                                        println!("{}", rel_path.display());
-                                    }
-                                    match section {
-                                        GitStatusSection::Staged | GitStatusSection::Unstaged => {
-                                            println!(
-                                                "{}",
-                                                Regex::new(r#"^\t+(\S)\S+:\s+(\S+)$"#)
-                                                    .unwrap()
-                                                    .replace(line, |caps: &Captures| {
-                                                        let op = match section {
-                                                            GitStatusSection::Staged => format!(
-                                                                "+{}",
-                                                                caps[1].to_uppercase()
-                                                            ),
-                                                            _ => format!(
-                                                                "-{}",
-                                                                caps[1].to_uppercase()
-                                                            ),
-                                                        };
-                                                        if color {
-                                                            match &caps[1] {
-                                                                "d" => format!(
-                                                                    "  \u{1b}[31m{}\u{1b}[m: {}",
-                                                                    op, &caps[2]
-                                                                ),
-                                                                "n" => {
-                                                                    format!(            
-                                                                    "  \u{1b}[32m{}\u{1b}[m: {}",
-                                                                    op, &caps[2]           
-                                                                )
-                                                                }
-                                                                _ => {
-                                                                    format!(              
-                                                                    "  \u{1b}[33m{}\u{1b}[m: {}",
-                                                                    op, &caps[2]
-                                                                )
-                                                                }
-                                                            }
-                                                        } else {
-                                                            format!("  {}: {}", op, &caps[2])
-                                                        }
-                                                    })
-                                            )
-                                        }
-                                        GitStatusSection::Untracked => {
-                                            if color {
-                                                println!(
-                                                    "  \u{1b}[32m-N\u{1b}[m: {}",
-                                                    line.trim_start_matches("\t")
-                                                )
-                                            } else {
-                                                println!("  -N: {}", line.trim_start_matches("\t"))
-                                            }
-                                        }
-                                        _ => {}
-                                    }
-                                } else if line == "Changes to be committed:" {
-                                    section = GitStatusSection::Staged;
-                                } else if line == "Changes not staged for commit:" {
-                                    section = GitStatusSection::Unstaged;
-                                } else if line == "Untracked files:" {
-                                    section = GitStatusSection::Untracked;
-                                }
-                            }
-                            if label {
-                                clean = false;
+                    if let Some(branch) = info.branch {
+                        if &branch != "master" {
+                            header = true;
+                            output.push_str(&rel_path.to_string_lossy());
+                            if color {
+                                output
+                                    .push_str(&format!(" \u{1b}[1m\u{1b}[33m@{}\u{1b}[m", branch));
+                            } else {
+                                output.push_str(&format!(" @{}", branch));
                             }
                         }
-                        Err(_) => println!("{}\n  git status failed", rel_path.display()),
                     }
+
+                    if header || info.commits_ahead > 0 || info.commits_behind > 0 {
+                        if !header {
+                            header = true;
+                            output.push_str(&rel_path.to_string_lossy());
+                        }
+                        output.push_str(&format!(
+                            " [{}:{}]",
+                            info.commits_ahead, info.commits_behind
+                        ));
+                    }
+
+                    if let Some(upstream) = info.upstream {
+                        if upstream != "origin/master" {
+                            if !header {
+                                header = true;
+                                output.push_str(&rel_path.to_string_lossy());
+                            }
+                            output.push_str(&format!(" ({})", upstream));
+                        }
+                    } else {
+                        if !header {
+                            header = true;
+                            output.push_str(&rel_path.to_string_lossy());
+                        }
+                        output.push_str(" (no remote)");
+                    }
+
+                    if header {
+                        output.push('\n');
+                    }
+
+                    for file in info.files {
+                        if color {
+                            output.push_str(&format!(
+                                "  {}{}: {}\n",
+                                match file.staged {
+                                    true => "\u{1b}[1m+",
+                                    false => "-",
+                                },
+                                match file.action {
+                                    GitAction::Delete => "\u{1b}[31mD\u{1b}[m",
+                                    GitAction::New => "\u{1b}[32mN\u{1b}[m",
+                                    GitAction::Modify => "\u{1b}[33mM\u{1b}[m",
+                                },
+                                file.location
+                            ));
+                        } else {
+                            output.push_str(&format!(
+                                "  {}{}: {}\n",
+                                match file.staged {
+                                    true => "+",
+                                    false => "-",
+                                },
+                                match file.action {
+                                    GitAction::Delete => "D",
+                                    GitAction::New => "N",
+                                    GitAction::Modify => "M",
+                                },
+                                file.location
+                            ));
+                        }
+                    }
+                } else {
+                    output.push_str(&format!(
+                        "{}\n  error reading git status\n",
+                        rel_path.display()
+                    ));
                 }
             }
         }
-        if clean {
+
+        if output.is_empty() {
             println!("all clean");
+        } else {
+            print!("{}", output);
         }
     }
 }

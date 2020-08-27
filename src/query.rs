@@ -7,6 +7,8 @@ mod fsmeta;
 pub use fsmeta::create_symlink;
 use fsmeta::{is_exe, is_symlink};
 
+pub mod status;
+
 fn resolve_relative_link(node: &Path, target: &Path) -> PathBuf {
     if let Some(parent) = node.parent() {
         return parent.join(&target);
