@@ -213,6 +213,10 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                         output.push('\n');
                     }
 
+                    if info.files.len() > 0 && !header {
+                        output.push_str(&format!("{}\n", rel_path.display()));
+                    }
+
                     for file in info.files {
                         if color {
                             output.push_str(&format!(
