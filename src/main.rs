@@ -15,7 +15,7 @@ mod args;
 use args::parse_args;
 
 mod operator;
-use operator::{cat, clone, dir, fork, list, make, new, relocate, remove, status, symlink, update};
+use operator::*;
 
 fn main() {
     match parse_args(
