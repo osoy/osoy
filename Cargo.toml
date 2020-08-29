@@ -1,6 +1,6 @@
 [package]
 name = "osoy"
-version = "0.2.0-1"
+version = "0.2.0-2"
 authors = ["rasmusmerzin <rasmusmerzin@gmail.com>"]
 license = "MIT"
 edition = "2018"
