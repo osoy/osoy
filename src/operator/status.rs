@@ -24,7 +24,9 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                         if &*branch != "master" {
                             header = true;
                         }
-                    } else if !header {
+                    }
+
+                    if !header {
                         if let Some(upstream) = &info.upstream {
                             if upstream != "origin/master" {
                                 header = true;
@@ -49,19 +51,19 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                             }
                         }
 
-                        if color && has_commits {
-                            output.push_str(&format!(
-                                " \u{1b}[1m\u{1b}[34m[{}:{}]\u{1b}[m",
-                                info.commits_ahead, info.commits_behind
-                            ));
-                        } else {
-                            output.push_str(&format!(
-                                " [{}:{}]",
-                                info.commits_ahead, info.commits_behind
-                            ));
-                        }
-
                         if let Some(upstream) = info.upstream {
+                            if color && has_commits {
+                                output.push_str(&format!(
+                                    " \u{1b}[1m\u{1b}[34m[{}:{}]\u{1b}[m",
+                                    info.commits_ahead, info.commits_behind
+                                ));
+                            } else {
+                                output.push_str(&format!(
+                                    " [{}:{}]",
+                                    info.commits_ahead, info.commits_behind
+                                ));
+                            }
+
                             output.push_str(&format!(" ({})", upstream));
                         } else {
                             output.push_str(" (no remote)");
