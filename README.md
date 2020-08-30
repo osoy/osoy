@@ -147,3 +147,4 @@ Following line will make it easier to navigate to package's directory
 - [ ] quiet flag for less output
 - [ ] visual progress for update, clone & fork
 - [ ] asynchronous updating & cloning
+- [ ] docs website
