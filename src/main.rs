@@ -15,7 +15,7 @@ mod args;
 use args::parse_args;
 
 mod operator;
-use operator::{cat, clone, dir, fork, list, make, new, remove, status, symlink, update};
+use operator::*;
 
 fn main() {
     match parse_args(
@@ -85,6 +85,7 @@ fn main() {
                                 "m" | "make" => {
                                     make(&packages_dir, &bin_dir, &words[1..], &answer, &option)
                                 }
+                                "move" => relocate(&packages_dir, &bin_dir, &words[1..], &answer),
                                 "dir" => dir(&packages_dir, &words[1..]),
                                 "readme" => {
                                     cat(&packages_dir, &words[1..], "(README|readme)(.md)?")

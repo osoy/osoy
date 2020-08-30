@@ -3,33 +3,11 @@ use std::fs::{create_dir_all, remove_dir, remove_file, File};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
-mod fsmeta;
+pub mod fsmeta;
 pub use fsmeta::create_symlink;
 use fsmeta::{is_exe, is_symlink};
 
 pub mod status;
-
-fn resolve_relative_link(node: &Path, target: &Path) -> PathBuf {
-    if let Some(parent) = node.parent() {
-        return parent.join(&target);
-    } else {
-        return target.to_path_buf();
-    }
-}
-
-fn get_node_target(node: &Path) -> PathBuf {
-    match node.read_link() {
-        Ok(target) => {
-            let target = resolve_relative_link(node, &target);
-            if &target == node {
-                return target;
-            } else {
-                return get_node_target(&target);
-            }
-        }
-        Err(_) => node.to_path_buf(),
-    }
-}
 
 fn path_matches_query(path: &Path, query: &[String]) -> bool {
     if query.len() == 0 {
@@ -99,6 +77,28 @@ pub fn get_exes(dir: &Path) -> Vec<PathBuf> {
         }
     }
     exes
+}
+
+fn resolve_relative_link(node: &Path, target: &Path) -> PathBuf {
+    if let Some(parent) = node.parent() {
+        return parent.join(&target);
+    } else {
+        return target.to_path_buf();
+    }
+}
+
+fn get_node_target(node: &Path) -> PathBuf {
+    match node.read_link() {
+        Ok(target) => {
+            let target = resolve_relative_link(node, &target);
+            if &target == node {
+                return target;
+            } else {
+                return get_node_target(&target);
+            }
+        }
+        Err(_) => node.to_path_buf(),
+    }
 }
 
 pub fn get_links_to(target: &Path, dir: &Path) -> Vec<PathBuf> {

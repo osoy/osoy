@@ -48,6 +48,7 @@ This software relies on extended file metadata to determine whether a file is ex
     n|new     <query>...      create new empty packages
     u|update  [query]...      update (all) packages
 
+    move      <query> <dest>  rename package's remote origin and relocate it's folder
     dir       <query>         print package's directory path
     read      <query>         view package's README file
     license   <query>         view package's LICENSE file
