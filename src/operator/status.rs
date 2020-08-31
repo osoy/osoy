@@ -113,7 +113,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
         }
 
         if output.is_empty() {
-            println!("all clean");
+            println!("OK");
         } else {
             print!("{}", output);
         }
