@@ -2,7 +2,7 @@ use crate::operator::symlink;
 use crate::prompt::{prompt_no, Answer};
 use crate::query::{get_repos, repo_id_from_url, url_from_query};
 use std::env::set_current_dir;
-use std::fs::rename;
+use std::fs::{create_dir_all, remove_dir_all, rename};
 use std::path::Path;
 use std::process::Command;
 
@@ -27,35 +27,41 @@ pub fn relocate(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Ans
                     if !move_path.exists()
                         || prompt_no(&format!("package '{}' exists. overwrite?", move_id), answer)
                     {
-                        if rename(&repo_path, &move_path).is_ok() {
-                            println!(
-                                "package moved from '{}' to '{}'",
-                                rel_path.display(),
-                                move_id
-                            );
-                            if set_current_dir(&move_path).is_ok() {
-                                match Command::new("git")
-                                    .args(&["remote", "remove", "origin"])
-                                    .status()
-                                {
-                                    Ok(_) => {}
-                                    Err(msg) => println!("error: {}", msg),
-                                }
-                                match Command::new("git")
-                                    .args(&["remote", "add", "origin", &move_url])
-                                    .status()
-                                {
-                                    Ok(result) => {
-                                        if result.success() {
-                                            println!("added remote origin '{}'", move_url);
-                                        }
-                                    }
-                                    Err(msg) => println!("error: {}", msg),
-                                }
+                        if move_path.exists() {
+                            match remove_dir_all(&move_path) {
+                                Ok(_) => println!("removed package '{}'", move_id),
+                                Err(e) => println!("failed to remove package '{}': {}", move_id, e),
                             }
-                            symlink(pkg_path, bin_path, &[move_dest.clone()], answer);
-                        } else {
-                            println!("failed to remove package '{}'", move_id);
+                        }
+                        match create_dir_all(&move_path) {
+                            Ok(_) => println!("created empty directory '{}'", move_id),
+                            Err(e) => println!("failed to create directory '{}': {}", move_id, e),
+                        }
+                        match rename(&repo_path, &move_path) {
+                            Ok(_) => {
+                                println!(
+                                    "package moved from '{}' to '{}'",
+                                    rel_path.display(),
+                                    move_id
+                                );
+                                if set_current_dir(&move_path).is_ok() {
+                                    match Command::new("git")
+                                        .args(&["remote", "set-url", "origin", &move_url])
+                                        .status()
+                                    {
+                                        Ok(result) => {
+                                            if result.success() {
+                                                println!("renamed remote origin '{}'", move_url);
+                                            }
+                                        }
+                                        Err(msg) => println!("error: {}", msg),
+                                    }
+                                }
+                                symlink(pkg_path, bin_path, &[move_dest.clone()], answer);
+                            }
+                            Err(e) => {
+                                println!("failed to rename package '{}': {}", rel_path.display(), e)
+                            }
                         }
                     }
                 }
