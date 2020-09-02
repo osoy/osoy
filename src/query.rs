@@ -168,10 +168,7 @@ pub fn remove_rec_if_empty(dir: &Path) {
 
 pub fn create_dir_if_absent(dir: &Path) {
     if !create_dir_all(dir).is_ok() {
-        println!(
-            "warning: couldn't remove empty directory '{}'",
-            dir.display()
-        );
+        println!("warning: couldn't create directory '{}'", dir.display());
     }
 }
 
