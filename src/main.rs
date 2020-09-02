@@ -43,8 +43,11 @@ fn main() {
                     let bin_dir = osoy_path.join("bin");
                     create_dir_if_absent(&packages_dir);
                     create_dir_if_absent(&bin_dir);
+
                     let color = parsed.flags.contains(&"color");
+                    let quiet = parsed.flags.contains(&"quiet");
                     let option = parsed.options.get("option");
+
                     match Answer::new(
                         parsed.flags.contains(&"force"),
                         parsed.flags.contains(&"defaults"),
@@ -54,8 +57,10 @@ fn main() {
                             Some(operator) => {
                                 let operands = &parsed.words[1..];
                                 match operator.as_str() {
-                                    "l" | "list" => list(&packages_dir, &bin_dir, operands, color),
-                                    "s" | "status" => status(&packages_dir, operands, color),
+                                    "l" | "list" => {
+                                        list(&packages_dir, &bin_dir, operands, color, quiet)
+                                    }
+                                    "s" | "status" => status(&packages_dir, operands, color, quiet),
                                     "c" | "clone" => {
                                         clone(&packages_dir, &bin_dir, operands, &answer, &option)
                                     }

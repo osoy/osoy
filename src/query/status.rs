@@ -3,6 +3,7 @@ use std::env::set_current_dir;
 use std::path::Path;
 use std::process::Command;
 
+#[derive(PartialEq)]
 pub enum GitAction {
     Delete,
     Modify,
@@ -24,6 +25,7 @@ pub struct GitStatus {
     pub branch: Option<String>,
 }
 
+#[derive(PartialEq)]
 enum GitStatusSection {
     Description,
     Staged,
@@ -85,7 +87,7 @@ pub fn get_status(dir: &Path) -> Option<GitStatus> {
                                         "n" => GitAction::New,
                                         _ => GitAction::Modify,
                                     },
-                                    staged: matches!(section, GitStatusSection::Staged),
+                                    staged: section == GitStatusSection::Staged,
                                 })
                             }
                         }
