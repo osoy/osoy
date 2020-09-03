@@ -22,8 +22,8 @@ pub use symlink::symlink;
 mod relocate;
 pub use relocate::relocate;
 
-mod make;
-pub use make::make;
+mod build;
+pub use build::build;
 
 mod clone;
 pub use clone::clone;

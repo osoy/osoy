@@ -1,5 +1,7 @@
 use regex::Regex;
 use std::env::set_current_dir;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process::Command;
 
@@ -8,6 +10,7 @@ pub enum GitAction {
     Delete,
     Modify,
     New,
+    Rename,
 }
 
 pub struct GitFile {
@@ -76,7 +79,7 @@ pub fn get_status(dir: &Path) -> Option<GitStatus> {
                 if Regex::new("^\t").unwrap().is_match(&line) {
                     match section {
                         GitStatusSection::Staged | GitStatusSection::Unstaged => {
-                            if let Some(caps) = Regex::new(r#"^\t+(\S)[^:]+:\s+(\S+)$"#)
+                            if let Some(caps) = Regex::new(r#"^\t+(\S)[^:]+:\s+(\S.*)$"#)
                                 .unwrap()
                                 .captures(line)
                             {
@@ -85,6 +88,7 @@ pub fn get_status(dir: &Path) -> Option<GitStatus> {
                                     action: match &caps[1] {
                                         "d" => GitAction::Delete,
                                         "n" => GitAction::New,
+                                        "r" => GitAction::Rename,
                                         _ => GitAction::Modify,
                                     },
                                     staged: section == GitStatusSection::Staged,
@@ -108,6 +112,24 @@ pub fn get_status(dir: &Path) -> Option<GitStatus> {
             }
 
             return Some(git_status);
+        }
+    }
+    None
+}
+
+pub fn get_branch(dir: &Path) -> Option<String> {
+    let head = dir.join(".git/HEAD");
+    if head.is_file() {
+        let mut buffer = String::new();
+        if let Ok(f) = File::open(&head) {
+            if BufReader::new(f).read_line(&mut buffer).is_ok() {
+                return Some(
+                    Regex::new("^.*/([^/]+)$")
+                        .unwrap()
+                        .replace(buffer.trim_end(), "$1")
+                        .to_string(),
+                );
+            }
         }
     }
     None

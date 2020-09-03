@@ -75,12 +75,14 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
                             let mut deleted_count = 0;
                             let mut created_count = 0;
                             let mut modified_count = 0;
+                            let mut renamed_count = 0;
 
                             for file in &info.files {
                                 match file.action {
                                     GitAction::Delete => deleted_count += 1,
                                     GitAction::New => created_count += 1,
                                     GitAction::Modify => modified_count += 1,
+                                    GitAction::Rename => renamed_count += 1,
                                 };
                             }
 
@@ -103,6 +105,12 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
                                         modified_count
                                     ));
                                 }
+                                if renamed_count > 0 {
+                                    output.push_str(&format!(
+                                        " \u{1b}[34mR{}\u{1b}[m",
+                                        renamed_count
+                                    ));
+                                }
                             } else {
                                 if deleted_count > 0 {
                                     output.push_str(&format!(" D{}", deleted_count));
@@ -112,6 +120,9 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
                                 }
                                 if modified_count > 0 {
                                     output.push_str(&format!(" M{}", modified_count));
+                                }
+                                if renamed_count > 0 {
+                                    output.push_str(&format!(" R{}", renamed_count));
                                 }
                             }
                         }
@@ -131,6 +142,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
                                             GitAction::Delete => "\u{1b}[31mD\u{1b}[m",
                                             GitAction::New => "\u{1b}[32mN\u{1b}[m",
                                             GitAction::Modify => "\u{1b}[33mM\u{1b}[m",
+                                            GitAction::Rename => "\u{1b}[34mR\u{1b}[m",
                                         },
                                         file.location
                                     ));
@@ -145,6 +157,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
                                             GitAction::Delete => "D",
                                             GitAction::New => "N",
                                             GitAction::Modify => "M",
+                                            GitAction::Rename => "R",
                                         },
                                         file.location
                                     ));

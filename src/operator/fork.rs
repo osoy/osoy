@@ -1,6 +1,6 @@
-use crate::operator::{make, symlink};
+use crate::operator::{build, symlink};
 use crate::prompt::{prompt_no, prompt_yes, Answer};
-use crate::query::{has_makefile, repo_id_from_url, url_from_query};
+use crate::query::{build::get_build_method, repo_id_from_url, url_from_query};
 use std::env::set_current_dir;
 use std::fs::remove_dir_all;
 use std::path::Path;
@@ -55,10 +55,10 @@ pub fn fork(
                                             Err(msg) => println!("error: {}", msg),
                                         }
                                     }
-                                    if has_makefile(&repo_path)
-                                        && prompt_yes("make forked package?", answer)
+                                    if get_build_method(&repo_path).is_some()
+                                        && prompt_yes("build forked package?", answer)
                                     {
-                                        make(
+                                        build(
                                             pkg_path,
                                             bin_path,
                                             &[repo_id.clone()],
