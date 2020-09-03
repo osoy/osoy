@@ -62,6 +62,7 @@ Default domain is github.com & default author is `<package>`.
 #### Flags
 
     -c --color      enable colors
+    -q --quiet      show less detailed output
     -h --help       show usage
     -v --version    show version
 
@@ -144,7 +145,7 @@ Following line will make it easier to navigate to package's directory
 - [x] list current branches
 - [x] deny flag to deny all prompts
 - [x] chain make prompt to update, clone & fork
-- [ ] quiet flag for less output
+- [x] quiet flag for less output
 - [ ] visual progress for update, clone & fork
 - [ ] asynchronous updating & cloning
 - [ ] docs website
