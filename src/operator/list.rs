@@ -4,16 +4,18 @@ use std::path::Path;
 pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, quiet: bool) {
     for repo in get_repos(pkg_path, pkg_path, query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
-            print!("{}", rel_path.display());
+            let mut output = String::new();
+
+            output.push_str(&rel_path.to_string_lossy());
 
             let exes = get_exes(&repo);
 
             if let Some(branch) = get_branch(&repo) {
                 if &branch != "master" {
                     if color {
-                        print!(" \u{1b}[93m@{}\u{1b}[m", branch);
+                        output.push_str(&format!(" \u{1b}[93m@{}\u{1b}[m", branch));
                     } else {
-                        print!(" @{}", branch);
+                        output.push_str(&format!(" @{}", branch));
                     }
                 }
             }
@@ -27,13 +29,13 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, qui
                 }
 
                 if color {
-                    print!(" \u{1b}[96m<{}>\u{1b}[m", linked_exes_count);
+                    output.push_str(&format!(" \u{1b}[96m<{}>\u{1b}[m", linked_exes_count));
                 } else {
-                    print!(" <{}>", linked_exes_count);
+                    output.push_str(&format!(" <{}>", linked_exes_count));
                 }
             }
 
-            println!();
+            output.push_str("\n");
 
             if !quiet {
                 for exe in exes {
@@ -43,9 +45,9 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, qui
 
                         if links.len() == 0 {
                             if color {
-                                println!("  \u{1b}[2m{}\u{1b}[m", filename);
+                                output.push_str(&format!("  \u{1b}[2m{}\u{1b}[m\n", filename));
                             } else {
-                                println!("  {}", filename);
+                                output.push_str(&format!("  {}\n", filename));
                             }
                         } else {
                             let mut link_list = String::new();
@@ -59,17 +61,19 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, qui
                                 }
                             }
                             if color {
-                                println!(
-                                    "  {} \u{1b}[2m<-\u{1b}[m \u{1b}[96m{}\u{1b}[m",
+                                output.push_str(&format!(
+                                    "  {} \u{1b}[2m<-\u{1b}[m \u{1b}[96m{}\u{1b}[m\n",
                                     filename, link_list
-                                );
+                                ));
                             } else {
-                                println!("  {} <- {}", filename, link_list);
+                                output.push_str(&format!("  {} <- {}\n", filename, link_list));
                             }
                         }
                     }
                 }
             }
+
+            print!("{}", output);
         }
     }
 }

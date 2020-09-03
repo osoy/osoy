@@ -9,7 +9,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
     if repos.len() <= 0 {
         println!("no packages satisfy query '{}'", query.join(" "));
     } else {
-        let mut output = String::new();
+        let mut clean = true;
 
         for repo in repos {
             if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
@@ -37,6 +37,8 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
                     }
 
                     if header {
+                        clean = false;
+                        let mut output = String::new();
                         output.push_str(&rel_path.to_string_lossy());
 
                         if let Some(branch) = info.branch {
@@ -149,20 +151,18 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
                                 }
                             }
                         }
+
+                        print!("{}", output);
                     }
                 } else {
-                    output.push_str(&format!(
-                        "{}\n  error reading git status\n",
-                        rel_path.display()
-                    ));
+                    clean = false;
+                    println!("{}\n  error reading git status", rel_path.display());
                 }
             }
         }
 
-        if output.is_empty() {
+        if clean {
             println!("OK");
-        } else {
-            print!("{}", output);
         }
     }
 }
