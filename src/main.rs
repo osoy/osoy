@@ -77,10 +77,12 @@ fn main() {
                                     "u" | "update" => {
                                         update(&packages_dir, &bin_dir, operands, &answer, &option)
                                     }
-                                    "m" | "make" => {
-                                        make(&packages_dir, &bin_dir, operands, &answer, &option)
+                                    "b" | "build" => {
+                                        build(&packages_dir, &bin_dir, operands, &answer, &option)
                                     }
-                                    "move" => relocate(&packages_dir, &bin_dir, operands, &answer),
+                                    "m" | "move" => {
+                                        relocate(&packages_dir, &bin_dir, operands, &answer)
+                                    }
                                     "dir" => dir(&packages_dir, operands),
                                     "readme" => {
                                         cat(&packages_dir, operands, "(README|readme)(.md)?")

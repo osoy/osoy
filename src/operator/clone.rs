@@ -1,6 +1,6 @@
-use crate::operator::{make, symlink};
+use crate::operator::{build, symlink};
 use crate::prompt::{prompt_no, prompt_yes, Answer};
-use crate::query::{has_makefile, repo_id_from_url, url_from_query};
+use crate::query::{build::get_build_method, repo_id_from_url, url_from_query};
 use std::fs::remove_dir_all;
 use std::path::Path;
 use std::process::Command;
@@ -33,7 +33,7 @@ pub fn clone(
                                 if result.success() {
                                     cloned_ids.push(String::from(repo_id));
                                     if !have_makefiles {
-                                        have_makefiles = has_makefile(&repo_path)
+                                        have_makefiles = get_build_method(&repo_path).is_some()
                                     }
                                 } else {
                                     println!("git clone failed");
@@ -50,8 +50,8 @@ pub fn clone(
             }
         }
         println!("{} packages cloned", cloned_ids.len());
-        if have_makefiles && prompt_yes("make cloned packages?", answer) {
-            make(pkg_path, bin_path, &cloned_ids, answer, option);
+        if have_makefiles && prompt_yes("build cloned packages?", answer) {
+            build(pkg_path, bin_path, &cloned_ids, answer, option);
         } else {
             symlink(pkg_path, bin_path, &cloned_ids, answer);
         }

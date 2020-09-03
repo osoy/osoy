@@ -1,4 +1,4 @@
-use crate::query::{get_branch, get_exes, get_links_to, get_repos};
+use crate::query::{get_exes, get_links_to, get_repos, status::get_branch};
 use std::path::Path;
 
 pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, quiet: bool) {

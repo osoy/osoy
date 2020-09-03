@@ -28,9 +28,9 @@ This software relies on extended file metadata to determine whether a file is ex
 
 ## Dependencies
 
-`git` & `make` are required for the application to function.
+`git`, `cargo` & `make` are required for the application to fully function.
 
-`make` & `cargo` are required to build the executable.
+`cargo` is required to build the executable.
 
 ## Usage
 
@@ -43,12 +43,12 @@ This software relies on extended file metadata to determine whether a file is ex
     y|symlink [query]...      make packages' executables available in PATH
     l|list    [query]...      list (all) packages
     s|status  [query]...      show status of (all) packages
-    m|make    [query]...      make (all) packages
+    b|build   [query]...      build (all) packages that have a make or cargo file
     r|remove  <query>...      remove packages
+    m|move    <query> <dest>  rename package's remote origin and relocate it's folder
     n|new     <query>...      create new empty packages
     u|update  [query]...      update (all) packages
 
-    move      <query> <dest>  rename package's remote origin and relocate it's folder
     dir       <query>         print package's directory path
     read      <query>         view package's README file
     license   <query>         view package's LICENSE file

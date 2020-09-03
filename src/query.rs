@@ -1,12 +1,12 @@
 use regex::{Captures, Regex};
-use std::fs::{create_dir_all, remove_dir, remove_file, File};
-use std::io::{BufRead, BufReader};
+use std::fs::{create_dir_all, remove_dir, remove_file};
 use std::path::{Path, PathBuf};
 
 pub mod fsmeta;
 pub use fsmeta::create_symlink;
 use fsmeta::{is_exe, is_symlink};
 
+pub mod build;
 pub mod status;
 
 fn path_matches_query(path: &Path, query: &[String]) -> bool {
@@ -241,28 +241,6 @@ pub fn get_first_file(dir: &Path, re: &str) -> Option<PathBuf> {
         }
     }
     None
-}
-
-pub fn get_branch(dir: &Path) -> Option<String> {
-    let head = dir.join(".git/HEAD");
-    if head.is_file() {
-        let mut buffer = String::new();
-        if let Ok(f) = File::open(&head) {
-            if BufReader::new(f).read_line(&mut buffer).is_ok() {
-                return Some(
-                    Regex::new("^.*/([^/]+)$")
-                        .unwrap()
-                        .replace(buffer.trim_end(), "$1")
-                        .to_string(),
-                );
-            }
-        }
-    }
-    None
-}
-
-pub fn has_makefile(dir: &Path) -> bool {
-    dir.join("Makefile").is_file() || dir.join("makefile").is_file()
 }
 
 #[cfg(test)]

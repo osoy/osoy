@@ -10,11 +10,11 @@ operators:
   y|symlink [query]...      make packages' executables available in PATH
   l|list    [query]...      list (all) packages
   s|status  [query]...      show status of (all) packages
-  m|make    [query]...      make (all) packages
+  b|build   [query]...      build (all) packages that have a make or cargo file
   r|remove  <query>...      remove packages
+  m|move    <query> <dest>  rename package's remote origin and relocate it's folder
   n|new     <query>...      create new empty packages
   u|update  [query]...      update (all) packages
-  move      <query> <dest>  rename package's remote origin and relocate it's folder
   dir       <query>         print package's directory path
   read      <query>         view package's README file
   license   <query>         view package's LICENSE file
