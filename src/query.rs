@@ -62,7 +62,7 @@ pub fn get_repos(dir: &Path, prefix: &Path, query: &[String]) -> Vec<PathBuf> {
     repos
 }
 
-pub fn get_exes(dir: &Path) -> Vec<PathBuf> {
+fn get_exes(dir: &Path) -> Vec<PathBuf> {
     let mut exes: Vec<PathBuf> = Vec::new();
     if let Ok(entries) = dir.read_dir() {
         for entry in entries {
@@ -76,6 +76,12 @@ pub fn get_exes(dir: &Path) -> Vec<PathBuf> {
             }
         }
     }
+    exes
+}
+
+pub fn get_repo_exes(repo: &Path) -> Vec<PathBuf> {
+    let mut exes = get_exes(repo);
+    exes.extend_from_slice(&get_exes(&repo.join("target/release")));
     exes
 }
 

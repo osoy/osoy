@@ -1,5 +1,5 @@
 use crate::prompt::{prompt_no, Answer};
-use crate::query::{create_symlink, get_exes, get_links_to, get_repos, remove_orphan_links};
+use crate::query::{create_symlink, get_links_to, get_repo_exes, get_repos, remove_orphan_links};
 use std::fs::remove_file;
 use std::path::Path;
 
@@ -11,7 +11,7 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answ
         println!("no packages satisfy query '{}'", query.join(" "));
     } else {
         for repo in repos {
-            for exe in get_exes(&repo) {
+            for exe in get_repo_exes(&repo) {
                 if let Some(filename_os) = exe.file_name() {
                     if let Some(filename) = filename_os.to_str() {
                         if get_links_to(&exe, bin_path).len() == 0 {

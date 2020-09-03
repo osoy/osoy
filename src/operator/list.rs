@@ -1,4 +1,4 @@
-use crate::query::{get_exes, get_links_to, get_repos, status::get_branch};
+use crate::query::{get_links_to, get_repo_exes, get_repos, status::get_branch};
 use std::path::Path;
 
 pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, quiet: bool) {
@@ -8,7 +8,7 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, qui
 
             output.push_str(&rel_path.to_string_lossy());
 
-            let exes = get_exes(&repo);
+            let exes = get_repo_exes(&repo);
 
             if let Some(branch) = get_branch(&repo) {
                 if &branch != "master" {
