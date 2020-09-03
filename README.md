@@ -3,7 +3,7 @@
 </p>
 <h1 align='center'>Osoy</h1>
 
-Lightweight git repository manager written in Rust.
+Command-line git repository manager.
 Inspired by
 <a href='https://github.com/junegunn/vim-plug' />vim-plug</a>,
 <a href='https://github.com/yarnpkg/yarn' />yarn</a> and

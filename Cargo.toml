@@ -2,8 +2,12 @@
 name = "osoy"
 version = "0.2.3"
 authors = ["rasmusmerzin <rasmusmerzin@gmail.com>"]
+repository = "https://github.com/osoy/osoy"
+description = "Command-line git repository manager."
+readme = "README.md"
 license = "MIT"
 edition = "2018"
+keywords = ["git"]
 
 [dependencies]
 dirs = "2.0"
