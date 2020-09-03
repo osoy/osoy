@@ -1,5 +1,4 @@
 use dirs::home_dir;
-use std::collections::HashMap;
 use std::env::args;
 
 pub mod query;
@@ -20,33 +19,22 @@ use operator::*;
 fn main() {
     match parse_args(
         &args().collect::<Vec<String>>()[1..],
-        [
-            ("h", "help"),
-            ("c", "color"),
-            ("v", "version"),
-            ("help", "help"),
-            ("color", "color"),
-            ("version", "version"),
-            ("f", "force"),
-            ("y", "defaults"),
-            ("n", "deny"),
-            ("force", "force"),
-            ("defaults", "defaults"),
-            ("deny", "deny"),
-        ]
-        .iter()
-        .cloned()
-        .collect::<HashMap<&str, &str>>(),
-        [("o", "option"), ("option", "option")]
-            .iter()
-            .cloned()
-            .collect::<HashMap<&str, &str>>(),
+        &[
+            &["color", "c"],
+            &["help", "h"],
+            &["version", "v"],
+            &["quiet", "q"],
+            &["force", "f"],
+            &["defaults", "y"],
+            &["deny", "n"],
+        ],
+        &[&["option", "o"]],
     ) {
         Err(msg) => println!("{}", msg),
-        Ok((words, flags, options)) => {
-            if flags.contains(&"help") {
-                print_usage(flags.contains(&"color"));
-            } else if flags.contains(&"version") {
+        Ok(parsed) => {
+            if parsed.flags.contains(&"help") {
+                print_usage(parsed.flags.contains(&"color"));
+            } else if parsed.flags.contains(&"version") {
                 println!("{}", env!("CARGO_PKG_VERSION"));
             } else {
                 if let Some(home) = home_dir() {
@@ -55,46 +43,54 @@ fn main() {
                     let bin_dir = osoy_path.join("bin");
                     create_dir_if_absent(&packages_dir);
                     create_dir_if_absent(&bin_dir);
-                    let color = flags.contains(&"color");
-                    let option = options.get("option");
+
+                    let color = parsed.flags.contains(&"color");
+                    let quiet = parsed.flags.contains(&"quiet");
+                    let option = parsed.options.get("option");
+
                     match Answer::new(
-                        flags.contains(&"force"),
-                        flags.contains(&"defaults"),
-                        flags.contains(&"deny"),
+                        parsed.flags.contains(&"force"),
+                        parsed.flags.contains(&"defaults"),
+                        parsed.flags.contains(&"deny"),
                     ) {
-                        Ok(answer) => match words.get(0) {
-                            Some(operator) => match operator.as_str() {
-                                "l" | "list" => list(&packages_dir, &bin_dir, &words[1..], color),
-                                "s" | "status" => status(&packages_dir, &words[1..], color),
-                                "c" | "clone" => {
-                                    clone(&packages_dir, &bin_dir, &words[1..], &answer, &option)
-                                }
-                                "f" | "fork" => {
-                                    fork(&packages_dir, &bin_dir, &words[1..], &answer, &option)
-                                }
-                                "r" | "remove" => {
-                                    remove(&packages_dir, &bin_dir, &words[1..], &answer)
-                                }
-                                "n" | "new" => new(&packages_dir, &words[1..], &answer),
-                                "y" | "symlink" => {
-                                    symlink(&packages_dir, &bin_dir, &words[1..], &answer)
-                                }
-                                "u" | "update" => {
-                                    update(&packages_dir, &bin_dir, &words[1..], &answer, &option)
-                                }
-                                "m" | "make" => {
-                                    make(&packages_dir, &bin_dir, &words[1..], &answer, &option)
-                                }
-                                "move" => relocate(&packages_dir, &bin_dir, &words[1..], &answer),
-                                "dir" => dir(&packages_dir, &words[1..]),
-                                "readme" => {
-                                    cat(&packages_dir, &words[1..], "(README|readme)(.md)?")
-                                }
-                                "license" => {
-                                    cat(&packages_dir, &words[1..], "(LICENSE|license)(.md)?")
-                                }
-                                _ => println!("unknown operator '{}'", operator),
-                            },
+                        Ok(answer) => match parsed.words.get(0) {
+                            Some(operator) => {
+                                let operands = &parsed.words[1..];
+                                match operator.as_str() {
+                                    "l" | "list" => {
+                                        list(&packages_dir, &bin_dir, operands, color, quiet)
+                                    }
+                                    "s" | "status" => status(&packages_dir, operands, color, quiet),
+                                    "c" | "clone" => {
+                                        clone(&packages_dir, &bin_dir, operands, &answer, &option)
+                                    }
+                                    "f" | "fork" => {
+                                        fork(&packages_dir, &bin_dir, operands, &answer, &option)
+                                    }
+                                    "r" | "remove" => {
+                                        remove(&packages_dir, &bin_dir, operands, &answer)
+                                    }
+                                    "n" | "new" => new(&packages_dir, operands, &answer),
+                                    "y" | "symlink" => {
+                                        symlink(&packages_dir, &bin_dir, operands, &answer)
+                                    }
+                                    "u" | "update" => {
+                                        update(&packages_dir, &bin_dir, operands, &answer, &option)
+                                    }
+                                    "m" | "make" => {
+                                        make(&packages_dir, &bin_dir, operands, &answer, &option)
+                                    }
+                                    "move" => relocate(&packages_dir, &bin_dir, operands, &answer),
+                                    "dir" => dir(&packages_dir, operands),
+                                    "readme" => {
+                                        cat(&packages_dir, operands, "(README|readme)(.md)?")
+                                    }
+                                    "license" => {
+                                        cat(&packages_dir, operands, "(LICENSE|license)(.md)?")
+                                    }
+                                    _ => println!("unknown operator '{}'", operator),
+                                };
+                            }
                             None => print_usage(color),
                         },
                         Err(msg) => println!("{}", msg),

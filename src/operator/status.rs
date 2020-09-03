@@ -4,12 +4,12 @@ use crate::query::{
 };
 use std::path::Path;
 
-pub fn status(pkg_path: &Path, query: &[String], color: bool) {
+pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
         println!("no packages satisfy query '{}'", query.join(" "));
     } else {
-        let mut output = String::new();
+        let mut clean = true;
 
         for repo in repos {
             if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
@@ -37,6 +37,8 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                     }
 
                     if header {
+                        clean = false;
+                        let mut output = String::new();
                         output.push_str(&rel_path.to_string_lossy());
 
                         if let Some(branch) = info.branch {
@@ -54,7 +56,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                         if let Some(upstream) = info.upstream {
                             if color && has_commits {
                                 output.push_str(&format!(
-                                    " \u{1b}[1m\u{1b}[34m[{}:{}]\u{1b}[m",
+                                    " \u{1b}[1m\u{1b}[94m[{}:{}]\u{1b}[m",
                                     info.commits_ahead, info.commits_behind
                                 ));
                             } else {
@@ -69,53 +71,98 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool) {
                             output.push_str(" (no remote)");
                         }
 
-                        output.push('\n');
+                        if quiet && info.files.len() > 0 {
+                            let mut deleted_count = 0;
+                            let mut created_count = 0;
+                            let mut modified_count = 0;
 
-                        for file in info.files {
+                            for file in &info.files {
+                                match file.action {
+                                    GitAction::Delete => deleted_count += 1,
+                                    GitAction::New => created_count += 1,
+                                    GitAction::Modify => modified_count += 1,
+                                };
+                            }
+
                             if color {
-                                output.push_str(&format!(
-                                    "  {}{}: {}\n",
-                                    match file.staged {
-                                        true => "+",
-                                        false => "-",
-                                    },
-                                    match file.action {
-                                        GitAction::Delete => "\u{1b}[31mD\u{1b}[m",
-                                        GitAction::New => "\u{1b}[32mN\u{1b}[m",
-                                        GitAction::Modify => "\u{1b}[33mM\u{1b}[m",
-                                    },
-                                    file.location
-                                ));
+                                if deleted_count > 0 {
+                                    output.push_str(&format!(
+                                        " \u{1b}[31mD{}\u{1b}[m",
+                                        deleted_count
+                                    ));
+                                }
+                                if created_count > 0 {
+                                    output.push_str(&format!(
+                                        " \u{1b}[32mN{}\u{1b}[m",
+                                        created_count
+                                    ));
+                                }
+                                if modified_count > 0 {
+                                    output.push_str(&format!(
+                                        " \u{1b}[33mM{}\u{1b}[m",
+                                        modified_count
+                                    ));
+                                }
                             } else {
-                                output.push_str(&format!(
-                                    "  {}{}: {}\n",
-                                    match file.staged {
-                                        true => "+",
-                                        false => "-",
-                                    },
-                                    match file.action {
-                                        GitAction::Delete => "D",
-                                        GitAction::New => "N",
-                                        GitAction::Modify => "M",
-                                    },
-                                    file.location
-                                ));
+                                if deleted_count > 0 {
+                                    output.push_str(&format!(" D{}", deleted_count));
+                                }
+                                if created_count > 0 {
+                                    output.push_str(&format!(" N{}", created_count));
+                                }
+                                if modified_count > 0 {
+                                    output.push_str(&format!(" M{}", modified_count));
+                                }
                             }
                         }
+
+                        output.push('\n');
+
+                        if !quiet {
+                            for file in info.files {
+                                if color {
+                                    output.push_str(&format!(
+                                        "  {}{}: {}\n",
+                                        match file.staged {
+                                            true => "+",
+                                            false => "-",
+                                        },
+                                        match file.action {
+                                            GitAction::Delete => "\u{1b}[31mD\u{1b}[m",
+                                            GitAction::New => "\u{1b}[32mN\u{1b}[m",
+                                            GitAction::Modify => "\u{1b}[33mM\u{1b}[m",
+                                        },
+                                        file.location
+                                    ));
+                                } else {
+                                    output.push_str(&format!(
+                                        "  {}{}: {}\n",
+                                        match file.staged {
+                                            true => "+",
+                                            false => "-",
+                                        },
+                                        match file.action {
+                                            GitAction::Delete => "D",
+                                            GitAction::New => "N",
+                                            GitAction::Modify => "M",
+                                        },
+                                        file.location
+                                    ));
+                                }
+                            }
+                        }
+
+                        print!("{}", output);
                     }
                 } else {
-                    output.push_str(&format!(
-                        "{}\n  error reading git status\n",
-                        rel_path.display()
-                    ));
+                    clean = false;
+                    println!("{}\n  error reading git status", rel_path.display());
                 }
             }
         }
 
-        if output.is_empty() {
+        if clean {
             println!("OK");
-        } else {
-            print!("{}", output);
         }
     }
 }

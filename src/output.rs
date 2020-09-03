@@ -21,6 +21,7 @@ operators:
 
 flags:
   -c --color      enable colors
+  -q --quiet      show less detailed output
   -h --help       show usage
   -v --version    show version
   -f --force      force prompts
