@@ -18,6 +18,9 @@ Inspired by
   - [Query syntax](#Query-syntax)
   - [Flags](#Flags)
 - [Installation](#Installation)
+  - [Cargo](#Cargo)
+  - [Manual](#Manual)
+  - [PATH](#PATH)
 - [Configuration](#Configuration)
 - [File structure](#File-structure)
 - [Todo](#Todo)
@@ -74,30 +77,45 @@ Default domain is github.com & default author is `<package>`.
 
 ## Installation
 
+#### Cargo
+
+Install with cargo.
+
+>     cargo install osoy
+
+Default cargo bin directory is `~/.cargo/bin`.
+More at [rust-lang.org](https://doc.rust-lang.org/cargo/guide/cargo-home.html#directories).
+
+#### Manual
+
 Clone osoy git repository.
 
 >     mkdir -p ~/.osoy/packages/github.com/osoy &&
 >       cd ~/.osoy/packages/github.com/osoy &&
 >       git clone https://github.com/osoy/osoy
 
-Create a symbolic link for osoy executable.
+Change directory to `~/.osoy/packages/github.com/osoy/osoy`.
 
->     mkdir -p ~/.osoy/bin &&
->       ln -s ~/.osoy/packages/github.com/osoy/osoy/osoy ~/.osoy/bin/osoy
+>     cd ~/.osoy/packages/github.com/osoy/osoy
 
-Build the executable.
+Create osoy release build.
 
->     cd ~/.osoy/packages/github.com/osoy/osoy && make
+>     cargo build --release
+
+Create a symbolic links with osoy.
+
+>     ./target/release/osoy y
+
+#### PATH
 
 Add osoy bin directory ~/.osoy/bin to your system path.
 
 >     PATH="$PATH:$HOME/.osoy/bin"
 
-To make it permanent add the previous line to your shell profile — ~/.bash_profile, ~/.zprofile, ~/.profile, etc.
+To make it permanent add the previous line to your shell profile — ~/.bash_profile, ~/.zprofile, ~/.profile, etc.  
 More at
-<a href='https://www.computerhope.com/issues/ch001647.htm'>computerhope</a>,
-<a href='https://askubuntu.com/questions/60218/how-to-add-a-directory-to-the-path'>askubuntu</a> or
-<a href='https://www.google.com/?q=add+directory+to+path'>google</a>.
+[askubuntu.com](https://askubuntu.com/questions/60218/how-to-add-a-directory-to-the-path) or
+[google.com](https://www.google.com/?q=add+directory+to+path)
 
 ## Configuration
 
