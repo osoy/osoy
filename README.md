@@ -164,6 +164,7 @@ Following line will make it easier to navigate to package's directory
 - [x] deny flag to deny all prompts
 - [x] chain make prompt to update, clone & fork
 - [x] quiet flag for less output
+- [ ] add explicit prompt when running `remove` without a query
 - [ ] visual progress for update, clone & fork
 - [ ] asynchronous updating & cloning
 - [ ] docs website
