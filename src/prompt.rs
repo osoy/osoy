@@ -1,5 +1,6 @@
 use std::io::{stdin, stdout, Write};
 
+#[derive(PartialEq)]
 pub enum Answer {
     Force,
     Default,
@@ -33,6 +34,28 @@ impl Answer {
     }
 }
 
+pub fn prompt(msg: &str, answer: &Answer) -> bool {
+    print!("{} [y/n] ", msg);
+    match answer {
+        Answer::Undefined | Answer::Default => loop {
+            stdout().flush().unwrap();
+            let mut input = String::new();
+            match stdin().read_line(&mut input) {
+                Ok(_) => match input.trim() {
+                    "Y" | "y" => return true,
+                    "N" | "n" => return false,
+                    _ => print!("{} [y/n] ", msg),
+                },
+                Err(msg) => println!("error: {}", msg),
+            }
+        },
+        _ => {
+            println!();
+            return answer == &Answer::Force;
+        }
+    }
+}
+
 pub fn prompt_yes(msg: &str, answer: &Answer) -> bool {
     print!("{} [Y/n] ", msg);
     match answer {
@@ -50,10 +73,7 @@ pub fn prompt_yes(msg: &str, answer: &Answer) -> bool {
         }
         _ => {
             println!();
-            match answer {
-                Answer::Force | Answer::Default => true,
-                _ => false,
-            }
+            return answer == &Answer::Force || answer == &Answer::Default;
         }
     }
 }
@@ -75,10 +95,7 @@ pub fn prompt_no(msg: &str, answer: &Answer) -> bool {
         }
         _ => {
             println!();
-            match answer {
-                Answer::Force => true,
-                _ => false,
-            }
+            return answer == &Answer::Force;
         }
     }
 }
