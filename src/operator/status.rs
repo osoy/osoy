@@ -2,7 +2,8 @@ use crate::query::{
     get_repos,
     status::{get_status, GitAction},
 };
-use std::path::Path;
+use std::env::current_dir;
+use std::path::{Path, PathBuf};
 
 pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
     let repos = get_repos(pkg_path, pkg_path, query);
@@ -10,6 +11,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
         println!("no packages satisfy query '{}'", query.join(" "));
     } else {
         let mut clean = true;
+        let working_dir = current_dir().unwrap_or(PathBuf::new());
 
         for repo in repos {
             if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
@@ -39,7 +41,11 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
                     if header {
                         clean = false;
                         let mut output = String::new();
-                        output.push_str(&rel_path.to_string_lossy());
+                        if color && working_dir == repo {
+                            output.push_str(&format!("\u{1b}[1m{}\u{1b}[m", rel_path.display()));
+                        } else {
+                            output.push_str(&rel_path.to_string_lossy());
+                        }
 
                         if let Some(branch) = info.branch {
                             if color {

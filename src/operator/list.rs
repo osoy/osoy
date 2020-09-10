@@ -1,12 +1,18 @@
 use crate::query::{get_links_to, get_repo_exes, get_repos, status::get_branch};
-use std::path::Path;
+use std::env::current_dir;
+use std::path::{Path, PathBuf};
 
 pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, quiet: bool) {
+    let working_dir = current_dir().unwrap_or(PathBuf::new());
     for repo in get_repos(pkg_path, pkg_path, query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
             let mut output = String::new();
 
-            output.push_str(&rel_path.to_string_lossy());
+            if color && working_dir == repo {
+                output.push_str(&format!("\u{1b}[1m{}\u{1b}[m", rel_path.display()));
+            } else {
+                output.push_str(&rel_path.to_string_lossy());
+            }
 
             if let Some(branch) = get_branch(&repo) {
                 if &branch != "master" {
