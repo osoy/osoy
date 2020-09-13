@@ -165,6 +165,7 @@ Following line will make it easier to navigate to package's directory
 - [x] chain make prompt to update, clone & fork
 - [x] quiet flag for less output
 - [x] add explicit prompt when running `remove` without a query
+- [ ] copy operator
 - [ ] visual progress for update, clone & fork
 - [ ] asynchronous updating & cloning
 - [ ] docs website
