@@ -43,8 +43,8 @@ pub fn parse_args<'a>(
                 let f = &a[2..];
                 if let Some(opt) = valid_opts.get(&f) {
                     listener_opt = *opt;
-                } else if valid_flags.contains_key(&f) {
-                    parsed_args.flags.push(valid_flags.get(f).unwrap());
+                } else if let Some(key) = valid_flags.get(&f) {
+                    parsed_args.flags.push(key);
                 } else {
                     return Err(format!("unknown flag '--{}'", f));
                 }
@@ -53,8 +53,8 @@ pub fn parse_args<'a>(
                     let f = &c.to_string();
                     if let Some(opt) = valid_opts.get(&f.as_str()) {
                         listener_opt = *opt;
-                    } else if valid_flags.contains_key(&f.as_str()) {
-                        parsed_args.flags.push(valid_flags.get(f.as_str()).unwrap());
+                    } else if let Some(key) = valid_flags.get(f.as_str()) {
+                        parsed_args.flags.push(key);
                     } else {
                         return Err(format!("unknown flag '-{}'", f));
                     }
