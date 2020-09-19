@@ -167,8 +167,9 @@ Following line will make it easier to navigate to package's directory
 - [x] add explicit prompt when running `remove` without a query
 - [ ] coma seperated options
 - [ ] build clean option for cargo
+- [ ] tidy output messages
 - [ ] copy operator
 - [ ] visual progress for update, clone & fork
-- [ ] asynchronous updating & cloning
+- [ ] parallel updating & cloning
 - [ ] windows support
 - [ ] docs website
