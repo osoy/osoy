@@ -33,7 +33,7 @@ pub fn build(
                             } else {
                                 println!("> make");
                             }
-                            match cmd.status() {
+                            match cmd.env("PWD", &repo).status() {
                                 Ok(result) => {
                                     if result.success() {
                                         count += 1;
