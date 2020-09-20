@@ -73,7 +73,7 @@ Default domain is github.com & default author is `<package>`.
     -y --defaults   continue with prompt defaults
     -n --deny       deny prompts
 
-    -o --option <>  specify option to run make with
+    -o --option <>  specify option to run make/build with
 
 ## Installation
 
@@ -165,8 +165,8 @@ Following line will make it easier to navigate to package's directory
 - [x] chain make prompt to update, clone & fork
 - [x] quiet flag for less output
 - [x] add explicit prompt when running `remove` without a query
-- [x] coma-seperated options
-- [ ] build clean option for cargo
+- [x] comma-seperated options
+- [x] integrate cargo build features with options flag
 - [ ] tidy output messages
 - [ ] copy operator
 - [ ] visual progress for update, clone & fork

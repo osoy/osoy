@@ -45,8 +45,16 @@ pub fn build(
                             }
                         }
                         Some(BuildMethod::Cargo) => {
-                            println!("{}\n> cargo build --release", rel_path.display());
-                            match Command::new("cargo").args(&["build", "--release"]).status() {
+                            println!("{}", rel_path.display());
+                            let mut cmd = Command::new("cargo");
+                            cmd.args(&["build", "--release"]);
+                            if let Some(option) = option {
+                                cmd.args(&["--features", &option.join(",")]);
+                                println!("> cargo build --release --features {}", option.join(","));
+                            } else {
+                                println!("> cargo build --release");
+                            }
+                            match cmd.status() {
                                 Ok(result) => {
                                     if result.success() {
                                         count += 1;
