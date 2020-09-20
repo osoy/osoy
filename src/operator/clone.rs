@@ -10,7 +10,7 @@ pub fn clone(
     bin_path: &Path,
     query: &[String],
     answer: &Answer,
-    option: &Option<&String>,
+    option: &Option<&Vec<String>>,
 ) {
     if query.len() <= 0 {
         println!("query required");

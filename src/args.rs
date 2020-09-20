@@ -4,7 +4,7 @@ use std::collections::HashMap;
 pub struct ParsedArgs<'a> {
     pub words: Vec<String>,
     pub flags: Vec<&'a str>,
-    pub options: HashMap<&'a str, String>,
+    pub options: HashMap<&'a str, Vec<String>>,
 }
 
 pub fn parse_args<'a>(
@@ -32,15 +32,16 @@ pub fn parse_args<'a>(
     let mut parsed_args = ParsedArgs::default();
     let mut listener_opt: &str = "";
 
-    for a in args {
+    for arg in args {
         if !listener_opt.is_empty() {
-            parsed_args
-                .options
-                .insert(listener_opt.clone(), a.to_owned());
+            parsed_args.options.insert(
+                listener_opt.clone(),
+                arg.split(",").map(|s| s.to_string()).collect(),
+            );
             listener_opt = "";
         } else {
-            if a.starts_with("--") {
-                let f = &a[2..];
+            if arg.starts_with("--") {
+                let f = &arg[2..];
                 if let Some(opt) = valid_opts.get(&f) {
                     listener_opt = *opt;
                 } else if let Some(key) = valid_flags.get(&f) {
@@ -48,8 +49,8 @@ pub fn parse_args<'a>(
                 } else {
                     return Err(format!("unknown flag '--{}'", f));
                 }
-            } else if a.starts_with("-") {
-                for c in a.chars().skip(1) {
+            } else if arg.starts_with("-") {
+                for c in arg.chars().skip(1) {
                     let f = &c.to_string();
                     if let Some(opt) = valid_opts.get(&f.as_str()) {
                         listener_opt = *opt;
@@ -60,7 +61,7 @@ pub fn parse_args<'a>(
                     }
                 }
             } else {
-                parsed_args.words.push(a.to_owned());
+                parsed_args.words.push(arg.to_owned());
             }
         }
     }

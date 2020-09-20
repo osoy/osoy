@@ -165,7 +165,7 @@ Following line will make it easier to navigate to package's directory
 - [x] chain make prompt to update, clone & fork
 - [x] quiet flag for less output
 - [x] add explicit prompt when running `remove` without a query
-- [ ] coma seperated options
+- [x] coma-seperated options
 - [ ] build clean option for cargo
 - [ ] tidy output messages
 - [ ] copy operator

@@ -93,7 +93,7 @@ fn main() {
                                     _ => println!("unknown operator '{}'", operator),
                                 };
                             }
-                            None => print_usage(color),
+                            None => println!("option: {}", option.unwrap_or(&Vec::new()).join(" ")), // None => print_usage(color),
                         },
                         Err(msg) => println!("{}", msg),
                     }

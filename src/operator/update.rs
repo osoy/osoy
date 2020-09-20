@@ -10,7 +10,7 @@ pub fn update(
     bin_path: &Path,
     query: &[String],
     answer: &Answer,
-    option: &Option<&String>,
+    option: &Option<&Vec<String>>,
 ) {
     let mut cloned_ids: Vec<String> = Vec::new();
     let mut have_makefiles = false;

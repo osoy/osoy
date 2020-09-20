@@ -13,7 +13,7 @@ pub fn build(
     bin_path: &Path,
     query: &[String],
     answer: &Answer,
-    option: &Option<&String>,
+    option: &Option<&Vec<String>>,
 ) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
@@ -28,8 +28,8 @@ pub fn build(
                             println!("{}", rel_path.display());
                             let mut cmd = Command::new("make");
                             if let Some(option) = option {
-                                cmd.arg(option);
-                                println!("> make {}", option);
+                                cmd.args(&**option);
+                                println!("> make {}", option.join(" "));
                             } else {
                                 println!("> make");
                             }
