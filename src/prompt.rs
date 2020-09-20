@@ -60,7 +60,7 @@ pub fn prompt_yes(msg: &str, answer: &Answer) -> bool {
     print!("{} [Y/n] ", msg);
     match answer {
         Answer::Undefined => {
-            let _ = stdout().flush();
+            stdout().flush().unwrap();
             let mut input = String::new();
             match stdin().read_line(&mut input) {
                 Ok(_) => match input.trim() {
@@ -82,7 +82,7 @@ pub fn prompt_no(msg: &str, answer: &Answer) -> bool {
     print!("{} [y/N] ", msg);
     match answer {
         Answer::Undefined => {
-            let _ = stdout().flush();
+            stdout().flush().unwrap();
             let mut input = String::new();
             match stdin().read_line(&mut input) {
                 Ok(_) => match input.trim() {
