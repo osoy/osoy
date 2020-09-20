@@ -13,7 +13,7 @@ pub fn build(
     bin_path: &Path,
     query: &[String],
     answer: &Answer,
-    option: &Option<&String>,
+    option: &Option<&Vec<String>>,
 ) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
@@ -28,8 +28,8 @@ pub fn build(
                             println!("{}", rel_path.display());
                             let mut cmd = Command::new("make");
                             if let Some(option) = option {
-                                cmd.arg(option);
-                                println!("> make {}", option);
+                                cmd.args(&**option);
+                                println!("> make {}", option.join(" "));
                             } else {
                                 println!("> make");
                             }
@@ -45,8 +45,16 @@ pub fn build(
                             }
                         }
                         Some(BuildMethod::Cargo) => {
-                            println!("{}\n> cargo build --release", rel_path.display());
-                            match Command::new("cargo").args(&["build", "--release"]).status() {
+                            println!("{}", rel_path.display());
+                            let mut cmd = Command::new("cargo");
+                            cmd.args(&["build", "--release"]);
+                            if let Some(option) = option {
+                                cmd.args(&["--features", &option.join(",")]);
+                                println!("> cargo build --release --features {}", option.join(","));
+                            } else {
+                                println!("> cargo build --release");
+                            }
+                            match cmd.status() {
                                 Ok(result) => {
                                     if result.success() {
                                         count += 1;
