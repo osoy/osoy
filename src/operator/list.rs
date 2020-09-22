@@ -1,4 +1,8 @@
-use crate::query::{get_links_to, get_repo_exes, get_repos, status::get_branch};
+use crate::query::{
+    exes::{get_links_to, get_repo_exes},
+    get_repos,
+    status::get_branch,
+};
 use std::env::current_dir;
 use std::path::{Path, PathBuf};
 

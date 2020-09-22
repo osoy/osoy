@@ -1,5 +1,9 @@
 use crate::prompt::{prompt_no, Answer};
-use crate::query::{create_symlink, get_links_to, get_repo_exes, get_repos, remove_orphan_links};
+use crate::query::{
+    exes::{get_links_to, get_repo_exes, remove_orphan_links},
+    fsmeta::create_symlink,
+    get_repos,
+};
 use std::fs::remove_file;
 use std::path::Path;
 

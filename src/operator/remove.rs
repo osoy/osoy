@@ -1,5 +1,5 @@
 use crate::prompt::{prompt, prompt_yes, Answer};
-use crate::query::{get_repos, remove_orphan_links, remove_rec_if_empty};
+use crate::query::{exes::remove_orphan_links, get_repos, remove_rec_if_empty};
 use std::fs::remove_dir_all;
 use std::path::Path;
 
