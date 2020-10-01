@@ -1,7 +1,7 @@
-<p align='center'>
+<div align='center'>
   <img alt='logo' src='./logo.svg' height="64" />
-</p>
-<h1 align='center'>Osoy</h1>
+  <h1>Osoy</h1>
+</div>
 
 Command-line git repository manager.
 Inspired by
@@ -91,8 +91,7 @@ More at [rust-lang.org](https://doc.rust-lang.org/cargo/guide/cargo-home.html#di
 Clone osoy git repository.
 
 >     mkdir -p ~/.osoy/packages/github.com/osoy &&
->       cd ~/.osoy/packages/github.com/osoy &&
->       git clone https://github.com/osoy/osoy
+>       git clone https://github.com/osoy/osoy ~/.osoy/packages/github.com/osoy/osoy
 
 Change directory to `~/.osoy/packages/github.com/osoy/osoy`.
 
@@ -104,7 +103,7 @@ Create osoy release build.
 
 Create a symbolic links with osoy.
 
->     ./target/release/osoy y
+>     ./target/release/osoy symlink
 
 #### PATH
 
