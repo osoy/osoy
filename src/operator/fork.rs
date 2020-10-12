@@ -22,7 +22,7 @@ pub fn fork(
         let fork_dest = &query[1];
         if let Some(url) = url_from_query(&q) {
             if let Some(fork_url) = url_from_query(&fork_dest) {
-                let repo_id = repo_id_from_url(&url).unwrap();
+                let repo_id = repo_id_from_url(&fork_url).unwrap();
                 let repo_path = pkg_path.join(&repo_id);
                 if !repo_path.exists()
                     || prompt_no(&format!("package '{}' exists. overwrite?", repo_id), answer)
