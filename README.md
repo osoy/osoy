@@ -168,6 +168,7 @@ Following line will make it easier to navigate to package's directory
 - [x] integrate cargo build features with options flag
 - [ ] tidy output messages
 - [ ] copy operator
+- [ ] config file with executable ignores
 - [ ] visual progress for update, clone & fork
 - [ ] parallel updating & cloning
 - [ ] windows support
