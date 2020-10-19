@@ -157,19 +157,16 @@ Following line will make it easier to navigate to package's directory
 
 ## Todo
 
-- [x] option flag for make
-- [x] fork operator
-- [x] list current branches
-- [x] deny flag to deny all prompts
-- [x] chain make prompt to update, clone & fork
-- [x] quiet flag for less output
-- [x] add explicit prompt when running `remove` without a query
-- [x] comma-seperated options
-- [x] integrate cargo build features with options flag
 - [ ] tidy output messages
+- [ ] two-letter shorthands
+- [ ] disable autolinking & default 'all' for linking
+- [ ] unlink operator
+- [ ] fix fork (when target & destination match)
+- [ ] default list and status with less details
+- [ ] parallel list and status
 - [ ] copy operator
-- [ ] config file with executable ignores
 - [ ] visual progress for update, clone & fork
 - [ ] parallel updating & cloning
-- [ ] windows support
+- [ ] improve build support (maven&gradle, npm&yarn, deno, go)
+- [ ] windows support (symlink & is_exe)
 - [ ] docs website
