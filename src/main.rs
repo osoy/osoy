@@ -1,8 +1,6 @@
-use dirs::home_dir;
 use std::env::args;
 
 pub mod query;
-use query::create_dir_if_absent;
 
 pub mod prompt;
 use prompt::Answer;
@@ -12,6 +10,9 @@ use output::print_usage;
 
 mod args;
 use args::parse_args;
+
+mod datadir;
+use datadir::data_dirs;
 
 mod operator;
 use operator::*;
@@ -23,7 +24,7 @@ fn main() {
             &["color", "c"],
             &["help", "h"],
             &["version", "v"],
-            &["quiet", "q"],
+            &["details", "d"],
             &["force", "f"],
             &["defaults", "y"],
             &["deny", "n"],
@@ -32,73 +33,97 @@ fn main() {
     ) {
         Err(msg) => println!("{}", msg),
         Ok(parsed) => {
+            let color = parsed.flags.contains(&"color");
+            let details = parsed.flags.contains(&"details");
+            let option = parsed.options.get("option");
+
             if parsed.flags.contains(&"help") {
-                print_usage(parsed.flags.contains(&"color"));
+                print_usage(color);
             } else if parsed.flags.contains(&"version") {
                 println!("{}", env!("CARGO_PKG_VERSION"));
             } else {
-                if let Some(home) = home_dir() {
-                    let osoy_path = home.join(".osoy");
-                    let packages_dir = osoy_path.join("packages");
-                    let bin_dir = osoy_path.join("bin");
-                    create_dir_if_absent(&packages_dir);
-                    create_dir_if_absent(&bin_dir);
-
-                    let color = parsed.flags.contains(&"color");
-                    let quiet = parsed.flags.contains(&"quiet");
-                    let option = parsed.options.get("option");
-
-                    match Answer::new(
+                match data_dirs() {
+                    Err(msg) => println!("{}", msg),
+                    Ok(data) => match Answer::new(
                         parsed.flags.contains(&"force"),
                         parsed.flags.contains(&"defaults"),
                         parsed.flags.contains(&"deny"),
                     ) {
-                        Ok(answer) => match parsed.words.get(0) {
+                        Err(msg) => println!("{}", msg),
+                        Ok(answer) => match parsed.operator {
                             Some(operator) => {
-                                let operands = &parsed.words[1..];
                                 match operator.as_str() {
-                                    "l" | "list" => {
-                                        list(&packages_dir, &bin_dir, operands, color, quiet)
+                                    "l" | "list" => list(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        color,
+                                        details,
+                                    ),
+                                    "s" | "status" => {
+                                        status(&data.packages, &parsed.operands, color, details)
                                     }
-                                    "s" | "status" => status(&packages_dir, operands, color, quiet),
-                                    "c" | "clone" => {
-                                        clone(&packages_dir, &bin_dir, operands, &answer, &option)
-                                    }
-                                    "f" | "fork" => {
-                                        fork(&packages_dir, &bin_dir, operands, &answer, &option)
-                                    }
+                                    "c" | "clone" => clone(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                        &option,
+                                    ),
+                                    "f" | "fork" => fork(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                        &option,
+                                    ),
                                     "r" | "remove" => {
-                                        remove(&packages_dir, &bin_dir, operands, &answer)
+                                        remove(&data.packages, &data.bin, &parsed.operands, &answer)
                                     }
-                                    "n" | "new" => new(&packages_dir, operands, &answer),
-                                    "y" | "symlink" => {
-                                        symlink(&packages_dir, &bin_dir, operands, &answer)
-                                    }
-                                    "u" | "update" => {
-                                        update(&packages_dir, &bin_dir, operands, &answer, &option)
-                                    }
-                                    "b" | "build" => {
-                                        build(&packages_dir, &bin_dir, operands, &answer, &option)
-                                    }
-                                    "m" | "move" => {
-                                        relocate(&packages_dir, &bin_dir, operands, &answer)
-                                    }
-                                    "dir" => dir(&packages_dir, operands),
-                                    "readme" => {
-                                        cat(&packages_dir, operands, "(README|readme)(.md)?")
-                                    }
-                                    "license" => {
-                                        cat(&packages_dir, operands, "(LICENSE|license)(.md)?")
-                                    }
+                                    "n" | "new" => new(&data.packages, &parsed.operands, &answer),
+                                    "y" | "symlink" => symlink(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                    ),
+                                    "u" | "update" => update(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                        &option,
+                                    ),
+                                    "b" | "build" => build(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                        &option,
+                                    ),
+                                    "m" | "move" => relocate(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                    ),
+                                    "dir" => dir(&data.packages, &parsed.operands),
+                                    "readme" => cat(
+                                        &data.packages,
+                                        &parsed.operands,
+                                        "(README|readme)(.md)?",
+                                    ),
+                                    "license" => cat(
+                                        &data.packages,
+                                        &parsed.operands,
+                                        "(LICENSE|license)(.md)?",
+                                    ),
                                     _ => println!("unknown operator '{}'", operator),
                                 };
                             }
                             None => print_usage(color),
                         },
-                        Err(msg) => println!("{}", msg),
-                    }
-                } else {
-                    println!("home directory not found")
+                    },
                 }
             }
         }

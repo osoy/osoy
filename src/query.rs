@@ -1,5 +1,5 @@
 use regex::{Captures, Regex};
-use std::fs::{create_dir_all, remove_dir};
+use std::fs::remove_dir;
 use std::path::{Path, PathBuf};
 
 pub mod build;
@@ -79,12 +79,6 @@ pub fn remove_rec_if_empty(dir: &Path) {
                 );
             }
         }
-    }
-}
-
-pub fn create_dir_if_absent(dir: &Path) {
-    if !create_dir_all(dir).is_ok() {
-        println!("warning: couldn't create directory '{}'", dir.display());
     }
 }
 

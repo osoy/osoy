@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct ParsedArgs<'a> {
-    pub words: Vec<String>,
+    pub operator: Option<String>,
+    pub operands: Vec<String>,
     pub flags: Vec<&'a str>,
     pub options: HashMap<&'a str, Vec<String>>,
 }
@@ -14,6 +15,7 @@ pub fn parse_args<'a>(
 ) -> Result<ParsedArgs<'a>, String> {
     let mut mut_flags: HashMap<&str, &str> = HashMap::new();
     let mut mut_opts: HashMap<&str, &str> = HashMap::new();
+
     for fs in valid_flags.iter() {
         let key = fs[0];
         for f in fs.iter() {
@@ -26,15 +28,16 @@ pub fn parse_args<'a>(
             mut_opts.insert(f, key);
         }
     }
+
     let valid_flags = mut_flags;
     let valid_opts = mut_opts;
 
-    let mut parsed_args = ParsedArgs::default();
+    let mut parsed = ParsedArgs::default();
     let mut listener_opt: &str = "";
 
     for arg in args {
         if !listener_opt.is_empty() {
-            parsed_args.options.insert(
+            parsed.options.insert(
                 listener_opt.clone(),
                 arg.split(",").map(|s| s.to_string()).collect(),
             );
@@ -45,7 +48,7 @@ pub fn parse_args<'a>(
                 if let Some(opt) = valid_opts.get(&f) {
                     listener_opt = *opt;
                 } else if let Some(key) = valid_flags.get(&f) {
-                    parsed_args.flags.push(key);
+                    parsed.flags.push(key);
                 } else {
                     return Err(format!("unknown flag '--{}'", f));
                 }
@@ -53,15 +56,23 @@ pub fn parse_args<'a>(
                 for c in arg.chars().skip(1) {
                     let f = &c.to_string();
                     if let Some(opt) = valid_opts.get(&f.as_str()) {
-                        listener_opt = *opt;
+                        if listener_opt.is_empty() {
+                            return Err(format!("option '--{}' requires value", listener_opt));
+                        } else {
+                            listener_opt = *opt;
+                        }
                     } else if let Some(key) = valid_flags.get(f.as_str()) {
-                        parsed_args.flags.push(key);
+                        parsed.flags.push(key);
                     } else {
                         return Err(format!("unknown flag '-{}'", f));
                     }
                 }
             } else {
-                parsed_args.words.push(arg.to_owned());
+                if parsed.operator.is_none() {
+                    parsed.operator = Some(arg.to_owned());
+                } else {
+                    parsed.operands.push(arg.to_owned());
+                }
             }
         }
     }
@@ -70,5 +81,5 @@ pub fn parse_args<'a>(
         return Err(format!("option '{}' requires a value", listener_opt));
     }
 
-    Ok(parsed_args)
+    Ok(parsed)
 }

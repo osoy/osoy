@@ -5,7 +5,7 @@ use crate::query::{
 use std::env::current_dir;
 use std::path::{Path, PathBuf};
 
-pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
+pub fn status(pkg_path: &Path, query: &[String], color: bool, details: bool) {
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
         println!("no packages satisfy query '{}'", query.join(" "));
@@ -77,7 +77,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
                             output.push_str(" (no remote)");
                         }
 
-                        if quiet && info.files.len() > 0 {
+                        if !details && info.files.len() > 0 {
                             let mut deleted_count = 0;
                             let mut created_count = 0;
                             let mut modified_count = 0;
@@ -135,7 +135,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, quiet: bool) {
 
                         output.push('\n');
 
-                        if !quiet {
+                        if details {
                             for file in info.files {
                                 if color {
                                     output.push_str(&format!(

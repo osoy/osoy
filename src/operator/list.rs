@@ -6,7 +6,7 @@ use crate::query::{
 use std::env::current_dir;
 use std::path::{Path, PathBuf};
 
-pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, quiet: bool) {
+pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, details: bool) {
     let working_dir = current_dir().unwrap_or(PathBuf::new());
     for repo in get_repos(pkg_path, pkg_path, query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
@@ -30,7 +30,7 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, qui
 
             let exes = get_repo_exes(&repo);
 
-            if quiet && exes.len() > 0 {
+            if !details && exes.len() > 0 {
                 let mut linked_exes_count = 0;
                 for exe in &exes {
                     if get_links_to(&exe, bin_path).len() > 0 {
@@ -47,7 +47,7 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, qui
 
             output.push_str("\n");
 
-            if !quiet {
+            if details {
                 for exe in exes {
                     if let Some(exe_name_os) = exe.file_name() {
                         let exe_name;

@@ -5,23 +5,23 @@ pub fn print_usage(color: bool) {
 usage: osoy <operator> [arguments] [flags]
 
 operators:
-  c|clone   <query>...      clone packages from GitHub, GitLab or Bitbucket
-  f|fork    <query> <fork>  clone a package overwriting remote origin to fork
-  y|symlink [query]...      make packages' executables available in PATH
-  l|list    [query]...      list (all) packages
-  s|status  [query]...      show status of (all) packages
-  b|build   [query]...      build (all) packages that have a make or cargo file
-  r|remove  <query>...      remove packages
-  m|move    <query> <dest>  rename package's remote origin and relocate it's folder
-  n|new     <query>...      create new empty packages
-  u|update  [query]...      update (all) packages
-  dir       <query>         print package's directory path
-  read      <query>         view package's README file
-  license   <query>         view package's LICENSE file
+  c|clone   <query>...            clone packages from using git
+  f|fork    <query> <destination> clone a package overwriting remote origin
+  y|symlink [query]...            make packages' executables available in PATH
+  l|list    [query]...            list (all) packages
+  s|status  [query]...            show status of (all) packages
+  b|build   [query]...            build (all) packages that have a make or cargo file
+  r|remove  <query>...            remove packages
+  m|move    <query> <destination> rename package's remote origin and relocate it's folder
+  n|new     <query>...            create new empty packages
+  u|update  [query]...            update (all) packages
+  dir       <query>               print package's directory path
+  read      <query>               view package's README file
+  license   <query>               view package's LICENSE file
 
 flags:
   -c --color      enable colors
-  -q --quiet      show less detailed output
+  -d --details    show detailed output
   -h --help       show usage
   -v --version    show version
   -f --force      force prompts
