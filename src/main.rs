@@ -31,81 +31,81 @@ fn main() {
         ],
         &[&["option", "o"]],
     ) {
-        Err(msg) => println!("{}", msg),
+        Err(msg) => eprintln!("{}", msg),
         Ok(parsed) => {
             let color = parsed.flags.contains(&"color");
             let details = parsed.flags.contains(&"details");
             let option = parsed.options.get("option");
 
             if parsed.flags.contains(&"help") {
-                print_usage(color);
+                print_usage();
             } else if parsed.flags.contains(&"version") {
                 println!("{}", env!("CARGO_PKG_VERSION"));
             } else {
                 match data_dirs() {
-                    Err(msg) => println!("{}", msg),
+                    Err(msg) => eprintln!("{}", msg),
                     Ok(data) => match Answer::new(
                         parsed.flags.contains(&"force"),
                         parsed.flags.contains(&"defaults"),
                         parsed.flags.contains(&"deny"),
                     ) {
-                        Err(msg) => println!("{}", msg),
+                        Err(msg) => eprintln!("{}", msg),
                         Ok(answer) => match parsed.operator {
                             Some(operator) => {
                                 match operator.as_str() {
-                                    "l" | "list" => list(
+                                    "n" | "new" => new(&data.packages, &parsed.operands, &answer),
+                                    "cl" | "clone" => clone(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                        &option,
+                                    ),
+                                    "fork" => fork(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                        &option,
+                                    ),
+                                    "pull" => update(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                        &option,
+                                    ),
+                                    "ln" | "link" => symlink(
+                                        &data.packages,
+                                        &data.bin,
+                                        &parsed.operands,
+                                        &answer,
+                                    ),
+                                    "ls" | "list" => list(
                                         &data.packages,
                                         &data.bin,
                                         &parsed.operands,
                                         color,
                                         details,
                                     ),
-                                    "s" | "status" => {
-                                        status(&data.packages, &parsed.operands, color, details)
-                                    }
-                                    "c" | "clone" => clone(
-                                        &data.packages,
-                                        &data.bin,
-                                        &parsed.operands,
-                                        &answer,
-                                        &option,
-                                    ),
-                                    "f" | "fork" => fork(
-                                        &data.packages,
-                                        &data.bin,
-                                        &parsed.operands,
-                                        &answer,
-                                        &option,
-                                    ),
-                                    "r" | "remove" => {
+                                    "rm" | "remove" => {
                                         remove(&data.packages, &data.bin, &parsed.operands, &answer)
                                     }
-                                    "n" | "new" => new(&data.packages, &parsed.operands, &answer),
-                                    "y" | "symlink" => symlink(
+                                    "mv" | "move" => relocate(
                                         &data.packages,
                                         &data.bin,
                                         &parsed.operands,
                                         &answer,
                                     ),
-                                    "u" | "update" => update(
+                                    "st" | "status" => {
+                                        status(&data.packages, &parsed.operands, color, details)
+                                    }
+                                    "mk" | "make" => build(
                                         &data.packages,
                                         &data.bin,
                                         &parsed.operands,
                                         &answer,
                                         &option,
-                                    ),
-                                    "b" | "build" => build(
-                                        &data.packages,
-                                        &data.bin,
-                                        &parsed.operands,
-                                        &answer,
-                                        &option,
-                                    ),
-                                    "m" | "move" => relocate(
-                                        &data.packages,
-                                        &data.bin,
-                                        &parsed.operands,
-                                        &answer,
                                     ),
                                     "dir" => dir(&data.packages, &parsed.operands),
                                     "readme" => cat(
@@ -118,10 +118,10 @@ fn main() {
                                         &parsed.operands,
                                         "(LICENSE|license)(.md)?",
                                     ),
-                                    _ => println!("unknown operator '{}'", operator),
+                                    _ => eprintln!("unknown operator '{}'", operator),
                                 };
                             }
-                            None => print_usage(color),
+                            None => print_usage(),
                         },
                     },
                 }

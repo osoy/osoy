@@ -41,21 +41,21 @@ This software relies on extended file metadata to determine whether a file is ex
 
 #### Operators
 
-| Long    | Short | Parameters                | Description                                             |
-| ------- | ----- | ------------------------- | ------------------------------------------------------- |
-| clone   | c     | \<query\>...              | clone packages from using git                           |
-| fork    | f     | \<query\> \<destination\> | clone a package overwriting remote origin               |
-| symlink | y     | [query]...                | make packages' executables available in PATH            |
-| list    | l     | [query]...                | list (all) packages                                     |
-| status  | s     | [query]...                | show status of (all) packages                           |
-| build   | b     | [query]...                | build (all) packages that have a make or cargo file     |
-| remove  | r     | \<query\>...              | remove packages                                         |
-| move    | m     | \<query\> \<destination\> | rename package's remote origin and relocate it's folder |
-| new     | n     | \<query\>...              | create new empty packages                               |
-| update  | u     | [query]...                | update (all) packages                                   |
-| dir     |       | \<query\>                 | print package's directory path                          |
-| read    |       | \<query\>                 | view package's README file                              |
-| license |       | \<query\>                 | view package's LICENSE file                             |
+| Short | Long    | Parameters                | Description                         |
+| ----- | ------- | ------------------------- | ----------------------------------- |
+| n     | new     | \<query\>...              | create new empty git repositories   |
+| cl    | clone   | \<query\>...              | clone git repositories              |
+|       | fork    | \<query\> \<destination\> | clone git repository to a different |
+|       | pull    | [query]...                | update repositories                 |
+| ln    | link    | [query]...                | link executables to PATH            |
+| ls    | list    | [query]...                | list repositories                   |
+| rm    | remove  | \<query\>...              | remove repositories                 |
+| mv    | move    | \<query\> \<destination\> | rename repository remote origin     |
+| st    | status  | [query]...                | show repository statuses            |
+| mk    | make    | [query]...                | make/build repositories             |
+|       | dir     | \<query\>                 | print repository directory path     |
+|       | readme  | \<query\>                 | print repository README file        |
+|       | license | \<query\>                 | print repository LICENSE file       |
 
 #### Query syntax
 
@@ -65,16 +65,25 @@ Default domain is github.com & default author is `<package>`.
 
 #### Flags
 
-| Long       | Short | Parameters  | Description                           |
-| ---------- | ----- | ----------- | ------------------------------------- |
-| --color    | -c    |             | enable colors                         |
-| --details  | -d    |             | show detailed output                  |
-| --help     | -h    |             | show usage                            |
-| --version  | -v    |             | show version                          |
-| --force    | -f    |             | force prompts                         |
-| --defaults | -y    |             | continue with prompt defaults         |
-| --deny     | -n    |             | deny prompts                          |
-| --option   | -o    | \<item\>... | specify option to run make/build with |
+| Short | Long       | Description                   |
+| ----- | ---------- | ----------------------------- |
+| -c    | --color    | enable colors                 |
+| -d    | --details  | show detailed output          |
+| -h    | --help     | show usage                    |
+| -v    | --version  | show version                  |
+| -f    | --force    | force prompts                 |
+| -y    | --defaults | continue with prompt defaults |
+| -n    | --deny     | deny prompts                  |
+
+#### Options
+
+| Short | Long     | Description                                     |
+| ----- | -------- | ----------------------------------------------- |
+| -o    | --option | specify options/features to run make/build with |
+
+Options can have one value or multiple comma-seperated values.
+
+> Ex: osoy make -o clean,all
 
 ## Installation
 
@@ -159,11 +168,11 @@ Following line will make it easier to navigate to package's directory
 ## Todo
 
 - [x] default list and status with less details
+- [x] two-letter shorthands
 - [ ] tidy output messages
-- [ ] two-letter shorthands
 - [ ] disable autolinking & default 'all' for linking
 - [ ] unlink operator
-- [ ] fix fork (when target & destination match)
+- [ ] fix move (when target & destination match)
 - [ ] parallel list and status
 - [ ] copy operator
 - [ ] visual progress for update, clone & fork
