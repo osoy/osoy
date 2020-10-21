@@ -5,11 +5,11 @@ use std::fs::remove_dir_all;
 use std::path::Path;
 use std::process::Command;
 
-pub fn fork(pkg_path: &Path, query: &[String], answer: &Answer) {
+pub fn fork(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<(), String> {
     if query.len() <= 0 {
-        println!("query and fork destination required");
+        Err(format!("query and fork destination required"))
     } else if query.len() <= 1 {
-        println!("fork destination required");
+        Err(format!("fork destination required"))
     } else {
         let q = &query[0];
         let fork_dest = &query[1];
@@ -48,21 +48,27 @@ pub fn fork(pkg_path: &Path, query: &[String], answer: &Answer) {
                                             Err(msg) => println!("error: {}", msg),
                                         }
                                     }
+                                    Ok(())
                                 } else {
-                                    println!("git clone failed");
+                                    Err(format!("git clone failed"))
                                 }
                             }
-                            Err(msg) => println!("git clone failed to start '{}'", msg),
+                            Err(msg) => Err(format!("error: {}", msg)),
                         }
                     } else {
-                        println!("failed to remove package '{}'", repo_id);
+                        Err(format!("failed to remove {}", repo_id))
                     }
+                } else {
+                    Ok(())
                 }
             } else {
-                println!("couldn't build url from fork destination '{}'", fork_dest);
+                Err(format!(
+                    "could not build url from fork destination '{}'",
+                    fork_dest
+                ))
             }
         } else {
-            println!("couldn't build url from query '{}'", q);
+            Err(format!("could not build url from query '{}'", q))
         }
     }
 }

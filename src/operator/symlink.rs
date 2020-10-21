@@ -7,12 +7,17 @@ use crate::query::{
 use std::fs::remove_file;
 use std::path::Path;
 
-pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answer) {
+pub fn symlink(
+    pkg_path: &Path,
+    bin_path: &Path,
+    query: &[String],
+    answer: &Answer,
+) -> Result<(), String> {
     remove_orphan_links(bin_path);
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
-        println!("no packages satisfy query '{}'", query.join(" "));
+        Err(format!("no packages satisfy query '{}'", query.join(" ")))
     } else {
         for repo in repos {
             for exe in get_repo_exes(&repo) {
@@ -60,5 +65,6 @@ pub fn symlink(pkg_path: &Path, bin_path: &Path, query: &[String], answer: &Answ
             }
         }
         println!("{} links created", count);
+        Ok(())
     }
 }

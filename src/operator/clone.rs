@@ -1,21 +1,20 @@
 use crate::prompt::{prompt_no, Answer};
-use crate::query::{build::get_build_method, repo_id_from_url, url_from_query};
+use crate::query::{repo_id_from_url, url_from_query};
 use std::fs::remove_dir_all;
 use std::path::Path;
 use std::process::Command;
 
-pub fn clone(pkg_path: &Path, query: &[String], answer: &Answer) {
+pub fn clone(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<(), String> {
     if query.len() <= 0 {
-        println!("query required");
+        Err(format!("query required"))
     } else {
         let mut cloned_ids: Vec<String> = Vec::new();
-        let mut have_makefiles = false;
         for q in query {
             if let Some(url) = url_from_query(&q) {
                 let repo_id = repo_id_from_url(&url).unwrap();
                 let repo_path = pkg_path.join(&repo_id);
                 if !repo_path.exists()
-                    || prompt_no(&format!("package '{}' exists. overwrite?", repo_id), answer)
+                    || prompt_no(&format!("{} exists. overwrite?", repo_id), answer)
                 {
                     if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
                         match Command::new("git")
@@ -25,23 +24,21 @@ pub fn clone(pkg_path: &Path, query: &[String], answer: &Answer) {
                             Ok(result) => {
                                 if result.success() {
                                     cloned_ids.push(String::from(repo_id));
-                                    if !have_makefiles {
-                                        have_makefiles = get_build_method(&repo_path).is_some()
-                                    }
                                 } else {
                                     println!("git clone failed");
                                 }
                             }
-                            Err(msg) => println!("git clone failed to start '{}'", msg),
+                            Err(msg) => println!("{}", msg),
                         }
                     } else {
-                        println!("failed to remove package '{}'", repo_id);
+                        println!("failed to remove {}", repo_id);
                     }
                 }
             } else {
-                println!("couldn't build url from query '{}'", q);
+                println!("could not build url from query {}", q);
             }
         }
         println!("{} packages cloned", cloned_ids.len());
+        Ok(())
     }
 }

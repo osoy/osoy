@@ -52,7 +52,7 @@ fn main() {
                         Err(msg) => eprintln!("{}", msg),
                         Ok(answer) => match parsed.operator {
                             Some(operator) => {
-                                match operator.as_str() {
+                                match match operator.as_str() {
                                     "n" | "new" => new(&data.packages, &parsed.operands, &answer),
                                     "cl" | "clone" => {
                                         clone(&data.packages, &parsed.operands, &answer)
@@ -95,8 +95,11 @@ fn main() {
                                         &parsed.operands,
                                         "(LICENSE|license)(.md)?",
                                     ),
-                                    _ => eprintln!("unknown operator '{}'", operator),
-                                };
+                                    _ => Err(format!("unknown operator '{}'", operator)),
+                                } {
+                                    Err(msg) => eprintln!("{}", msg),
+                                    Ok(_) => {}
+                                }
                             }
                             None => print_usage(),
                         },

@@ -6,7 +6,13 @@ use crate::query::{
 use std::env::current_dir;
 use std::path::{Path, PathBuf};
 
-pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, details: bool) {
+pub fn list(
+    pkg_path: &Path,
+    bin_path: &Path,
+    query: &[String],
+    color: bool,
+    details: bool,
+) -> Result<(), String> {
     let working_dir = current_dir().unwrap_or(PathBuf::new());
     for repo in get_repos(pkg_path, pkg_path, query) {
         if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
@@ -91,4 +97,5 @@ pub fn list(pkg_path: &Path, bin_path: &Path, query: &[String], color: bool, det
             print!("{}", output);
         }
     }
+    Ok(())
 }

@@ -1,14 +1,13 @@
-use crate::query::{build::get_build_method, get_repos};
+use crate::query::get_repos;
 use std::env::set_current_dir;
 use std::path::Path;
 use std::process::Command;
 
-pub fn update(pkg_path: &Path, query: &[String]) {
+pub fn update(pkg_path: &Path, query: &[String]) -> Result<(), String> {
     let mut cloned_ids: Vec<String> = Vec::new();
-    let mut have_makefiles = false;
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
-        println!("no packages satisfy query '{}'", query.join(" "));
+        Err(format!("no packages satisfy query '{}'", query.join(" ")))
     } else {
         for repo in repos {
             if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
@@ -18,20 +17,18 @@ pub fn update(pkg_path: &Path, query: &[String]) {
                         Ok(result) => {
                             if result.success() {
                                 cloned_ids.push(rel_path.to_string_lossy().to_string());
-                                if !have_makefiles {
-                                    have_makefiles = get_build_method(&repo).is_some()
-                                }
                             } else {
                                 println!("git pull failed");
                             }
                         }
-                        Err(msg) => println!("git pull failed to start '{}'", msg),
+                        Err(msg) => println!("error: {}", msg),
                     }
                 } else {
-                    println!("failed to access '{}'", repo.display());
+                    println!("failed to access {}", repo.display());
                 }
             }
         }
         println!("{} packages updated", &cloned_ids.len());
+        Ok(())
     }
 }

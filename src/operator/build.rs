@@ -6,11 +6,15 @@ use std::env::set_current_dir;
 use std::path::Path;
 use std::process::Command;
 
-pub fn build(pkg_path: &Path, query: &[String], option: &Option<&Vec<String>>) {
+pub fn build(
+    pkg_path: &Path,
+    query: &[String],
+    option: &Option<&Vec<String>>,
+) -> Result<(), String> {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
-        println!("no packages satisfy query '{}'", query.join(" "));
+        Err(format!("no packages satisfy query '{}'", query.join(" ")))
     } else {
         for repo in repos {
             if let Ok(rel_path) = repo.strip_prefix(pkg_path) {
@@ -33,7 +37,7 @@ pub fn build(pkg_path: &Path, query: &[String], option: &Option<&Vec<String>>) {
                                         println!("make failed");
                                     }
                                 }
-                                Err(msg) => println!("make failed '{}'", msg),
+                                Err(msg) => println!("error: {}", msg),
                             }
                         }
                         Some(BuildMethod::Cargo) => {
@@ -54,7 +58,7 @@ pub fn build(pkg_path: &Path, query: &[String], option: &Option<&Vec<String>>) {
                                         println!("build failed");
                                     }
                                 }
-                                Err(msg) => println!("build failed '{}'", msg),
+                                Err(msg) => println!("error: {}", msg),
                             }
                         }
                         None => {}
@@ -65,5 +69,6 @@ pub fn build(pkg_path: &Path, query: &[String], option: &Option<&Vec<String>>) {
             }
         }
         println!("{} packages built", count);
+        Ok(())
     }
 }

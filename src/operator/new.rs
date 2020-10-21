@@ -5,9 +5,9 @@ use std::fs::remove_dir_all;
 use std::path::Path;
 use std::process::Command;
 
-pub fn new(pkg_path: &Path, query: &[String], answer: &Answer) {
+pub fn new(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<(), String> {
     if query.len() <= 0 {
-        println!("destination required");
+        Err(format!("destination required"))
     } else {
         for q in query {
             if let Some(url) = url_from_query(&q) {
@@ -41,15 +41,16 @@ pub fn new(pkg_path: &Path, query: &[String], answer: &Answer) {
                                     println!("git init failed");
                                 }
                             }
-                            Err(msg) => println!("git init failed to start '{}'", msg),
+                            Err(msg) => println!("error: {}", msg),
                         }
                     } else {
                         println!("failed to remove package '{}'", repo_id);
                     }
                 }
             } else {
-                println!("couldn't build url from query '{}'", q);
+                println!("could not build url from query '{}'", q);
             }
         }
+        Ok(())
     }
 }

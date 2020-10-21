@@ -5,10 +5,10 @@ use crate::query::{
 use std::env::current_dir;
 use std::path::{Path, PathBuf};
 
-pub fn status(pkg_path: &Path, query: &[String], color: bool, details: bool) {
+pub fn status(pkg_path: &Path, query: &[String], color: bool, details: bool) -> Result<(), String> {
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
-        println!("no packages satisfy query '{}'", query.join(" "));
+        Err(format!("no packages satisfy query '{}'", query.join(" ")))
     } else {
         let mut clean = true;
         let working_dir = current_dir().unwrap_or(PathBuf::new());
@@ -183,5 +183,7 @@ pub fn status(pkg_path: &Path, query: &[String], color: bool, details: bool) {
         if clean {
             println!("OK");
         }
+
+        Ok(())
     }
 }
