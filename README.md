@@ -169,14 +169,16 @@ Following line will make it easier to navigate to package's directory
 
 - [x] default list and status with less details
 - [x] two-letter shorthands
+- [x] disable prompt linking
+- [x] fix move (when target & destination match)
+- [ ] operator errors should be returned
+- [ ] enable linking with flags
 - [ ] tidy output messages
-- [ ] disable autolinking & default 'all' for linking
 - [ ] unlink operator
-- [ ] fix move (when target & destination match)
 - [ ] parallel list and status
 - [ ] copy operator
 - [ ] visual progress for update, clone & fork
 - [ ] parallel updating & cloning
-- [ ] improve build support (maven&gradle, npm&yarn, deno, go)
+- [ ] improve build support (wrappers: maven&gradle, npm&yarn, deno)
 - [ ] windows support (symlink & is_exe)
 - [ ] docs website

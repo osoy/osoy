@@ -1,17 +1,9 @@
-use crate::operator::{build, symlink};
-use crate::prompt::{prompt_yes, Answer};
 use crate::query::{build::get_build_method, get_repos};
 use std::env::set_current_dir;
 use std::path::Path;
 use std::process::Command;
 
-pub fn update(
-    pkg_path: &Path,
-    bin_path: &Path,
-    query: &[String],
-    answer: &Answer,
-    option: &Option<&Vec<String>>,
-) {
+pub fn update(pkg_path: &Path, query: &[String]) {
     let mut cloned_ids: Vec<String> = Vec::new();
     let mut have_makefiles = false;
     let repos = get_repos(pkg_path, pkg_path, query);
@@ -41,10 +33,5 @@ pub fn update(
             }
         }
         println!("{} packages updated", &cloned_ids.len());
-        if have_makefiles && prompt_yes("build updated packages?", answer) {
-            build(pkg_path, bin_path, &cloned_ids, answer, option);
-        } else {
-            symlink(pkg_path, bin_path, &cloned_ids, answer);
-        }
     }
 }

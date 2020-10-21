@@ -1,17 +1,10 @@
-use crate::operator::{build, symlink};
-use crate::prompt::{prompt_no, prompt_yes, Answer};
+use crate::prompt::{prompt_no, Answer};
 use crate::query::{build::get_build_method, repo_id_from_url, url_from_query};
 use std::fs::remove_dir_all;
 use std::path::Path;
 use std::process::Command;
 
-pub fn clone(
-    pkg_path: &Path,
-    bin_path: &Path,
-    query: &[String],
-    answer: &Answer,
-    option: &Option<&Vec<String>>,
-) {
+pub fn clone(pkg_path: &Path, query: &[String], answer: &Answer) {
     if query.len() <= 0 {
         println!("query required");
     } else {
@@ -50,10 +43,5 @@ pub fn clone(
             }
         }
         println!("{} packages cloned", cloned_ids.len());
-        if have_makefiles && prompt_yes("build cloned packages?", answer) {
-            build(pkg_path, bin_path, &cloned_ids, answer, option);
-        } else {
-            symlink(pkg_path, bin_path, &cloned_ids, answer);
-        }
     }
 }

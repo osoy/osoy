@@ -1,5 +1,3 @@
-use crate::operator::symlink;
-use crate::prompt::Answer;
 use crate::query::{
     build::{get_build_method, BuildMethod},
     get_repos,
@@ -8,13 +6,7 @@ use std::env::set_current_dir;
 use std::path::Path;
 use std::process::Command;
 
-pub fn build(
-    pkg_path: &Path,
-    bin_path: &Path,
-    query: &[String],
-    answer: &Answer,
-    option: &Option<&Vec<String>>,
-) {
+pub fn build(pkg_path: &Path, query: &[String], option: &Option<&Vec<String>>) {
     let mut count = 0;
     let repos = get_repos(pkg_path, pkg_path, query);
     if repos.len() <= 0 {
@@ -73,6 +65,5 @@ pub fn build(
             }
         }
         println!("{} packages built", count);
-        symlink(pkg_path, bin_path, query, answer);
     }
 }

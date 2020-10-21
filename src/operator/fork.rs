@@ -1,18 +1,11 @@
-use crate::operator::{build, symlink};
-use crate::prompt::{prompt_no, prompt_yes, Answer};
-use crate::query::{build::get_build_method, repo_id_from_url, url_from_query};
+use crate::prompt::{prompt_no, Answer};
+use crate::query::{repo_id_from_url, url_from_query};
 use std::env::set_current_dir;
 use std::fs::remove_dir_all;
 use std::path::Path;
 use std::process::Command;
 
-pub fn fork(
-    pkg_path: &Path,
-    bin_path: &Path,
-    query: &[String],
-    answer: &Answer,
-    option: &Option<&Vec<String>>,
-) {
+pub fn fork(pkg_path: &Path, query: &[String], answer: &Answer) {
     if query.len() <= 0 {
         println!("query and fork destination required");
     } else if query.len() <= 1 {
@@ -54,19 +47,6 @@ pub fn fork(
                                             }
                                             Err(msg) => println!("error: {}", msg),
                                         }
-                                    }
-                                    if get_build_method(&repo_path).is_some()
-                                        && prompt_yes("build forked package?", answer)
-                                    {
-                                        build(
-                                            pkg_path,
-                                            bin_path,
-                                            &[repo_id.clone()],
-                                            answer,
-                                            option,
-                                        );
-                                    } else {
-                                        symlink(pkg_path, bin_path, &[repo_id.clone()], answer);
                                     }
                                 } else {
                                     println!("git clone failed");

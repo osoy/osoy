@@ -54,27 +54,11 @@ fn main() {
                             Some(operator) => {
                                 match operator.as_str() {
                                     "n" | "new" => new(&data.packages, &parsed.operands, &answer),
-                                    "cl" | "clone" => clone(
-                                        &data.packages,
-                                        &data.bin,
-                                        &parsed.operands,
-                                        &answer,
-                                        &option,
-                                    ),
-                                    "fork" => fork(
-                                        &data.packages,
-                                        &data.bin,
-                                        &parsed.operands,
-                                        &answer,
-                                        &option,
-                                    ),
-                                    "pull" => update(
-                                        &data.packages,
-                                        &data.bin,
-                                        &parsed.operands,
-                                        &answer,
-                                        &option,
-                                    ),
+                                    "cl" | "clone" => {
+                                        clone(&data.packages, &parsed.operands, &answer)
+                                    }
+                                    "fork" => fork(&data.packages, &parsed.operands, &answer),
+                                    "pull" => update(&data.packages, &parsed.operands),
                                     "ln" | "link" => symlink(
                                         &data.packages,
                                         &data.bin,
@@ -91,22 +75,15 @@ fn main() {
                                     "rm" | "remove" => {
                                         remove(&data.packages, &data.bin, &parsed.operands, &answer)
                                     }
-                                    "mv" | "move" => relocate(
-                                        &data.packages,
-                                        &data.bin,
-                                        &parsed.operands,
-                                        &answer,
-                                    ),
+                                    "mv" | "move" => {
+                                        relocate(&data.packages, &parsed.operands, &answer)
+                                    }
                                     "st" | "status" => {
                                         status(&data.packages, &parsed.operands, color, details)
                                     }
-                                    "mk" | "make" => build(
-                                        &data.packages,
-                                        &data.bin,
-                                        &parsed.operands,
-                                        &answer,
-                                        &option,
-                                    ),
+                                    "mk" | "make" => {
+                                        build(&data.packages, &parsed.operands, &option)
+                                    }
                                     "dir" => dir(&data.packages, &parsed.operands),
                                     "readme" => cat(
                                         &data.packages,
