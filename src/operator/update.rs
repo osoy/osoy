@@ -18,13 +18,13 @@ pub fn update(pkg_path: &Path, query: &[String]) -> Result<(), String> {
                             if result.success() {
                                 cloned_ids.push(rel_path.to_string_lossy().to_string());
                             } else {
-                                println!("git pull failed");
+                                eprintln!("git pull failed");
                             }
                         }
-                        Err(msg) => println!("error: {}", msg),
+                        Err(msg) => eprintln!("error: {}", msg),
                     }
                 } else {
-                    println!("failed to access {}", repo.display());
+                    eprintln!("failed to access {}", repo.display());
                 }
             }
         }

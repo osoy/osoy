@@ -34,10 +34,10 @@ pub fn build(
                                     if result.success() {
                                         count += 1;
                                     } else {
-                                        println!("make failed");
+                                        eprintln!("make failed");
                                     }
                                 }
-                                Err(msg) => println!("error: {}", msg),
+                                Err(msg) => eprintln!("error: {}", msg),
                             }
                         }
                         Some(BuildMethod::Cargo) => {
@@ -55,16 +55,16 @@ pub fn build(
                                     if result.success() {
                                         count += 1;
                                     } else {
-                                        println!("build failed");
+                                        eprintln!("build failed");
                                     }
                                 }
-                                Err(msg) => println!("error: {}", msg),
+                                Err(msg) => eprintln!("error: {}", msg),
                             }
                         }
                         None => {}
                     }
                 } else {
-                    println!("failed to access '{}'", repo.display());
+                    eprintln!("failed to access {}", repo.display());
                 }
             }
         }

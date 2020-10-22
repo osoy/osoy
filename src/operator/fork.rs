@@ -18,7 +18,7 @@ pub fn fork(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<(), St
                 let repo_id = repo_id_from_url(&fork_url).unwrap();
                 let repo_path = pkg_path.join(&repo_id);
                 if !repo_path.exists()
-                    || prompt_no(&format!("package '{}' exists. overwrite?", repo_id), answer)
+                    || prompt_no(&format!("{} exists. overwrite?", repo_id), answer)
                 {
                     if !repo_path.exists() || remove_dir_all(&repo_path).is_ok() {
                         match Command::new("git")
@@ -27,14 +27,13 @@ pub fn fork(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<(), St
                         {
                             Ok(result) => {
                                 if result.success() {
-                                    println!("package cloned from '{}'", url);
                                     if set_current_dir(&repo_path).is_ok() {
                                         match Command::new("git")
                                             .args(&["remote", "rename", "origin", "upstream"])
                                             .status()
                                         {
                                             Ok(_) => {}
-                                            Err(msg) => println!("error: {}", msg),
+                                            Err(msg) => eprintln!("error: {}", msg),
                                         }
                                         match Command::new("git")
                                             .args(&["remote", "add", "origin", &fork_url])
@@ -42,10 +41,10 @@ pub fn fork(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<(), St
                                         {
                                             Ok(result) => {
                                                 if result.success() {
-                                                    println!("added remote origin '{}'", fork_url);
+                                                    println!("added origin {}", fork_url);
                                                 }
                                             }
-                                            Err(msg) => println!("error: {}", msg),
+                                            Err(msg) => eprintln!("error: {}", msg),
                                         }
                                     }
                                     Ok(())

@@ -28,7 +28,7 @@ pub fn symlink(
                             if !link.exists()
                                 || prompt_no(
                                     &format!(
-                                        "node '{}' exists. overwrite pointing to '{}'?",
+                                        "node {} exists. overwrite pointing to {}?",
                                         link.display(),
                                         if let Ok(rel_path) = exe.strip_prefix(pkg_path) {
                                             rel_path.display()
@@ -53,10 +53,10 @@ pub fn symlink(
                                                 }
                                             );
                                         }
-                                        Err(msg) => println!("failed to create a link\n{}", msg),
+                                        Err(msg) => eprintln!("error: {}", msg),
                                     }
                                 } else {
-                                    println!("failed to remove '{}'", link.display());
+                                    eprintln!("failed to remove {}", link.display());
                                 }
                             }
                         }

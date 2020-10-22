@@ -47,10 +47,10 @@ pub fn get_repos(dir: &Path, prefix: &Path, query: &[String]) -> Vec<PathBuf> {
             }
             if count == 0 && dir != prefix {
                 if remove_dir(dir).is_ok() {
-                    println!("info: removed empty directory '{}'", dir.display());
+                    eprintln!("info: removed empty directory '{}'", dir.display());
                 } else {
-                    println!(
-                        "warning: couldn't remove empty directory '{}'",
+                    eprintln!(
+                        "warning: failed to remove empty directory {}",
                         dir.display()
                     );
                 }
@@ -68,13 +68,13 @@ pub fn remove_rec_if_empty(dir: &Path) {
         }
         if count == 0 {
             if remove_dir(dir).is_ok() {
-                println!("info: removed empty directory '{}'", dir.display());
+                eprintln!("info: removed empty directory {}", dir.display());
                 let mut path_buf = dir.to_path_buf();
                 path_buf.pop();
                 remove_rec_if_empty(&path_buf);
             } else {
-                println!(
-                    "warning: couldn't remove empty directory '{}'",
+                eprintln!(
+                    "warning: failed to remove empty directory {}",
                     dir.display()
                 );
             }

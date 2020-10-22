@@ -24,31 +24,31 @@ pub fn new(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<(), Str
                             Ok(result) => {
                                 if result.success() {
                                     if set_current_dir(&repo_path).is_ok() {
-                                        println!("package created at '{}'", repo_id);
+                                        println!("created {}", repo_id);
                                         match Command::new("git")
                                             .args(&["remote", "add", "origin", &url])
                                             .status()
                                         {
                                             Ok(result) => {
                                                 if result.success() {
-                                                    println!("added remote origin '{}'", url);
+                                                    println!("added origin {}", url);
                                                 }
                                             }
-                                            Err(msg) => println!("error: {}", msg),
+                                            Err(msg) => eprintln!("error: {}", msg),
                                         }
                                     }
                                 } else {
-                                    println!("git init failed");
+                                    eprintln!("git init failed");
                                 }
                             }
-                            Err(msg) => println!("error: {}", msg),
+                            Err(msg) => eprintln!("error: {}", msg),
                         }
                     } else {
-                        println!("failed to remove package '{}'", repo_id);
+                        eprintln!("failed to remove package {}", repo_id);
                     }
                 }
             } else {
-                println!("could not build url from query '{}'", q);
+                eprintln!("could not build url from query {}", q);
             }
         }
         Ok(())

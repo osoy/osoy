@@ -36,7 +36,7 @@ pub fn remove(
                             repo.pop();
                             remove_rec_if_empty(&repo);
                         }
-                        Err(msg) => println!("error: {}: {}", rel_path.display(), msg),
+                        Err(msg) => eprintln!("error: {}: {}", rel_path.display(), msg),
                     };
                 }
             }

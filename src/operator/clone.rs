@@ -25,17 +25,17 @@ pub fn clone(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<(), S
                                 if result.success() {
                                     cloned_ids.push(String::from(repo_id));
                                 } else {
-                                    println!("git clone failed");
+                                    eprintln!("git clone failed");
                                 }
                             }
-                            Err(msg) => println!("{}", msg),
+                            Err(msg) => eprintln!("error: {}", msg),
                         }
                     } else {
-                        println!("failed to remove {}", repo_id);
+                        eprintln!("failed to remove {}", repo_id);
                     }
                 }
             } else {
-                println!("could not build url from query {}", q);
+                eprintln!("failed to build url from query '{}'", q);
             }
         }
         println!("{} packages cloned", cloned_ids.len());

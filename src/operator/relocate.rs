@@ -25,7 +25,7 @@ pub fn relocate(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<()
                     let move_path = pkg_path.join(&move_id);
                     if &move_path == repo_path
                         || !move_path.exists()
-                        || prompt_no(&format!("package {} exists. overwrite?", move_id), answer)
+                        || prompt_no(&format!("{} exists. overwrite?", move_id), answer)
                     {
                         if &move_path != repo_path {
                             if move_path.exists() {
@@ -73,7 +73,7 @@ pub fn relocate(pkg_path: &Path, query: &[String], answer: &Answer) -> Result<()
                 Ok(())
             } else {
                 Err(format!(
-                    "couldn't build url from move destination '{}'",
+                    "failed to build url from destination '{}'",
                     move_dest
                 ))
             }

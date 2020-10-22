@@ -18,10 +18,10 @@ pub fn cat(pkg_path: &Path, query: &[String], file_re: &str) -> Result<(), Strin
                     println!("{}", buffer);
                     Ok(())
                 } else {
-                    Err(format!("could not read {}", file.display()))
+                    Err(format!("failed to read {}", file.display()))
                 }
             } else {
-                Err(format!("could not open {}", file.display()))
+                Err(format!("faile to open {}", file.display()))
             }
         } else {
             Err(format!("no file found"))

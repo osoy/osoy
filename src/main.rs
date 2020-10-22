@@ -40,7 +40,11 @@ fn main() {
             if parsed.flags.contains(&"help") {
                 print_usage();
             } else if parsed.flags.contains(&"version") {
-                println!("{}", env!("CARGO_PKG_VERSION"));
+                println!(
+                    "{} version {}",
+                    env!("CARGO_PKG_NAME"),
+                    env!("CARGO_PKG_VERSION")
+                );
             } else {
                 match data_dirs() {
                     Err(msg) => eprintln!("{}", msg),
