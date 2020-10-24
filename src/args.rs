@@ -56,7 +56,7 @@ pub fn parse_args<'a>(
                 for c in arg.chars().skip(1) {
                     let f = &c.to_string();
                     if let Some(opt) = valid_opts.get(&f.as_str()) {
-                        if listener_opt.is_empty() {
+                        if !listener_opt.is_empty() {
                             return Err(format!("option '--{}' requires value", listener_opt));
                         } else {
                             listener_opt = *opt;
@@ -78,7 +78,7 @@ pub fn parse_args<'a>(
     }
 
     if !listener_opt.is_empty() {
-        return Err(format!("option '{}' requires a value", listener_opt));
+        return Err(format!("option '--{}' requires value", listener_opt));
     }
 
     Ok(parsed)
