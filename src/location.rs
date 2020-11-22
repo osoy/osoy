@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::{error, fmt};
 
@@ -54,6 +55,40 @@ impl Location {
             None => format!("https://{}", self.id(),),
         }
     }
+
+    pub fn matches_re(&self, path: &Path) -> bool {
+        let mut path = PathBuf::from(path);
+        for word in self.id.iter().rev() {
+            if Regex::new(&format!("^{}$", word))
+                .map(|re| {
+                    re.is_match(
+                        path.file_name()
+                            .map(|osname| osname.to_str())
+                            .flatten()
+                            .unwrap_or(""),
+                    )
+                })
+                .unwrap_or(false)
+            {
+                path.pop();
+            } else {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub fn matches(&self, path: &Path) -> bool {
+        let mut path = PathBuf::from(path);
+        for word in self.id.iter().rev() {
+            if path.ends_with(word) {
+                path.pop();
+            } else {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 impl fmt::Display for Location {
@@ -78,29 +113,33 @@ impl FromStr for Location {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let re_other = Regex::new("^([^:/]+)://").unwrap();
         let re_git = Regex::new("^git@([^:]+):|^([^:/@]+):").unwrap();
+
+        let protocol;
+        let id: Vec<String>;
+
         if re_other.is_match(s) {
-            Ok(Self {
-                protocol: Some(Protocol::Other(re_other.captures(s).unwrap()[1].into())),
-                id: re_other
-                    .replace(s, "")
-                    .split("/")
-                    .map(|s| s.to_owned())
-                    .collect(),
-            })
+            protocol = Some(Protocol::Other(re_other.captures(s).unwrap()[1].into()));
+            id = re_other
+                .replace(s, "")
+                .split("/")
+                .map(|s| s.to_owned())
+                .collect();
         } else if re_git.is_match(s) {
-            Ok(Self {
-                protocol: Some(Protocol::Git),
-                id: re_git
-                    .replace(s, "$1$2/")
-                    .split("/")
-                    .map(|s| s.to_owned())
-                    .collect(),
-            })
+            protocol = Some(Protocol::Git);
+            id = re_git
+                .replace(s, "$1$2/")
+                .split("/")
+                .map(|s| s.to_owned())
+                .collect();
         } else {
-            Ok(Self {
-                protocol: None,
-                id: s.split("/").map(|s| s.to_owned()).collect(),
-            })
+            protocol = None;
+            id = s.split("/").map(|s| s.to_owned()).collect();
+        }
+
+        if id.len() == 0 {
+            Err(ParseLocationError {})
+        } else {
+            Ok(Self { protocol, id })
         }
     }
 }

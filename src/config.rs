@@ -1,5 +1,5 @@
+use std::env;
 use std::path::PathBuf;
-use std::{env, fs, io};
 
 #[cfg(target_family = "unix")]
 const HOME_VAR: &str = "HOME";
@@ -9,7 +9,8 @@ const HOME_VAR: &str = "USERPROFILE";
 const OSOY_HOME_VAR: &str = "OSOY_HOME";
 
 pub struct Config {
-    home: PathBuf,
+    pub src: PathBuf,
+    pub bin: PathBuf,
 }
 
 impl Config {
@@ -28,19 +29,10 @@ impl Config {
             }
         };
 
-        Self { home }
-    }
-
-    pub fn get_src(&self) -> io::Result<PathBuf> {
-        let src = self.home.join("src");
-        fs::create_dir_all(&src)?;
-        Ok(src)
-    }
-
-    pub fn get_bin(&self) -> io::Result<PathBuf> {
-        let bin = self.home.join("bin");
-        fs::create_dir_all(&bin)?;
-        Ok(bin)
+        Self {
+            src: home.join("src"),
+            bin: home.join("bin"),
+        }
     }
 }
 
@@ -52,11 +44,14 @@ mod tests {
     fn home() {
         let osoy_home = "/home/user/.local/share/osoy";
         env::set_var(OSOY_HOME_VAR, osoy_home);
-        assert_eq!(Config::from_env().home, PathBuf::from(osoy_home));
+        assert_eq!(Config::from_env().src, PathBuf::from(osoy_home).join("src"));
 
         let home = "/home/user";
         env::set_var(OSOY_HOME_VAR, "");
         env::set_var(HOME_VAR, home);
-        assert_eq!(Config::from_env().home, PathBuf::from(home).join(".osoy"));
+        assert_eq!(
+            Config::from_env().bin,
+            PathBuf::from(home).join(".osoy/bin")
+        );
     }
 }

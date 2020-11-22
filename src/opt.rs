@@ -1,7 +1,6 @@
+use crate::Location;
 use structopt::clap::{AppSettings, Shell};
 pub use structopt::StructOpt;
-
-use crate::Location;
 
 #[derive(StructOpt, Debug)]
 #[structopt(
@@ -24,6 +23,14 @@ pub enum Operator {
     Completions {
         #[structopt(possible_values = &Shell::variants())]
         shell: Shell,
+    },
+
+    #[structopt(alias = "ls", about = "List repositories")]
+    List {
+        #[structopt(short, long, help = "Use regular expressions")]
+        regex: bool,
+        #[structopt(help = Location::about())]
+        targets: Vec<Location>,
     },
 
     #[structopt(alias = "n", about = "Create new empty git repositories")]
