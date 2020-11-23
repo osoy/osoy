@@ -25,13 +25,13 @@ impl Location {
             Some(_) => self.id.join("/"),
             None => format!(
                 "{}{}{}",
-                match self.id.len() < 3 {
-                    true => "github.com/",
-                    false => "",
+                match self.id.len() {
+                    1 | 2 => "github.com/",
+                    _ => "",
                 },
-                match self.id.len() == 1 {
-                    true => format!("{}/", self.id[0]),
-                    false => "".into(),
+                match self.id.len() {
+                    1 => format!("{}/", self.id[0]),
+                    _ => "".into(),
                 },
                 self.id.join("/"),
             ),
@@ -111,34 +111,34 @@ impl error::Error for ParseLocationError {}
 impl FromStr for Location {
     type Err = ParseLocationError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let re_other = Regex::new("^([^:/]+)://").unwrap();
-        let re_git = Regex::new("^git@([^:]+):|^([^:/@]+):").unwrap();
-
-        let protocol;
-        let id: Vec<String>;
-
-        if re_other.is_match(s) {
-            protocol = Some(Protocol::Other(re_other.captures(s).unwrap()[1].into()));
-            id = re_other
-                .replace(s, "")
-                .split("/")
-                .map(|s| s.to_owned())
-                .collect();
-        } else if re_git.is_match(s) {
-            protocol = Some(Protocol::Git);
-            id = re_git
-                .replace(s, "$1$2/")
-                .split("/")
-                .map(|s| s.to_owned())
-                .collect();
-        } else {
-            protocol = None;
-            id = s.split("/").map(|s| s.to_owned()).collect();
-        }
-
-        if id.len() == 0 {
+        if s.is_empty() {
             Err(ParseLocationError {})
         } else {
+            let re_other = Regex::new("^([^:/]+)://").unwrap();
+            let re_git = Regex::new("^git@([^:]+):|^([^:/@]+):").unwrap();
+
+            let protocol;
+            let id: Vec<String>;
+
+            if re_other.is_match(s) {
+                protocol = Some(Protocol::Other(re_other.captures(s).unwrap()[1].into()));
+                id = re_other
+                    .replace(s, "")
+                    .split("/")
+                    .map(|s| s.to_owned())
+                    .collect();
+            } else if re_git.is_match(s) {
+                protocol = Some(Protocol::Git);
+                id = re_git
+                    .replace(s, "$1$2/")
+                    .split("/")
+                    .map(|s| s.to_owned())
+                    .collect();
+            } else {
+                protocol = None;
+                id = s.split("/").map(|s| s.to_owned()).collect();
+            }
+
             Ok(Self { protocol, id })
         }
     }
@@ -197,5 +197,10 @@ mod tests {
             "github.com/osoy/osoy",
             "osoy",
         );
+    }
+
+    #[test]
+    fn error() {
+        assert!(Location::from_str("").is_err());
     }
 }
