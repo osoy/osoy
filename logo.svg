@@ -7,13 +7,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   sodipodi:docname="osoy.svg"
-   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   sodipodi:docname="logo.svg"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
    id="svg8"
    version="1.1"
-   viewBox="0 0 155.99197 163.95435"
-   height="163.95435mm"
-   width="155.99196mm">
+   viewBox="0 0 12.08323 12.7"
+   height="12.7mm"
+   width="12.083229mm">
   <defs
      id="defs2">
     <inkscape:path-effect
@@ -30,17 +30,17 @@
   </defs>
   <sodipodi:namedview
      inkscape:window-maximized="0"
-     inkscape:window-y="548"
+     inkscape:window-y="16"
      inkscape:window-x="0"
-     inkscape:window-height="532"
-     inkscape:window-width="960"
+     inkscape:window-height="1064"
+     inkscape:window-width="1920"
      showgrid="false"
      inkscape:document-rotation="0"
      inkscape:current-layer="layer1"
      inkscape:document-units="mm"
-     inkscape:cy="374.91271"
-     inkscape:cx="243.74518"
-     inkscape:zoom="0.35"
+     inkscape:cy="-2.6475191"
+     inkscape:cx="2.4037396"
+     inkscape:zoom="7.9195959"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      borderopacity="1.0"
@@ -55,25 +55,29 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
-     transform="translate(-24.711467,-79.209107)"
+     transform="translate(-24.711468,-79.209107)"
      id="layer1"
      inkscape:groupmode="layer"
      inkscape:label="Layer 1">
-    <path
-       sodipodi:nodetypes="ccc"
-       transform="scale(0.26458333)"
-       d="M 682.9736,299.37301 C 477.36621,502.53492 57.028504,349.17488 95.921875,919.04297 267.08665,839.42001 613.3079,1018.6028 682.9736,299.37301 Z"
-       style="fill:#32a132;fill-opacity:1;stroke:none;stroke-width:0.999999px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       id="path18" />
-    <path
-       sodipodi:nodetypes="ccc"
-       id="path23"
-       d="M 180.70343,79.209107 C 127.83794,195.29026 70.456273,153.73493 25.379329,243.16345 70.152782,131.21087 126.49491,178.83311 180.70343,79.209107 Z"
-       style="fill:#2c8f2c;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    <g
+       id="g905"
+       transform="matrix(0.07746059,0,0,0.07746059,22.797303,73.073523)">
+      <path
+         sodipodi:nodetypes="ccc"
+         transform="scale(0.26458333)"
+         d="M 682.9736,299.37301 C 477.36621,502.53492 57.028504,349.17488 95.921875,919.04297 267.08665,839.42001 613.3079,1018.6028 682.9736,299.37301 Z"
+         style="fill:#32a132;fill-opacity:1;stroke:none;stroke-width:0.999999px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="path18" />
+      <path
+         sodipodi:nodetypes="ccc"
+         id="path23"
+         d="M 180.70343,79.209107 C 127.83794,195.29026 70.456273,153.73493 25.379329,243.16345 70.152782,131.21087 126.49491,178.83311 180.70343,79.209107 Z"
+         style="fill:#2c8f2c;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
   </g>
 </svg>

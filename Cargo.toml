@@ -1,8 +1,13 @@
 [package]
 name = "osoy"
 version = "0.3.0"
-authors = ["rasmusmerzin <rasmusmerzin@gmail.com>"]
+authors = ["Emil Rasmus Merzin <rasmusmerzin@gmail.com>"]
 edition = "2018"
+description = "Command-line git repository manager"
+repository = "https://github.com/osoy/osoy"
+readme = "README.md"
+license = "MIT"
+keywords = ["git", "cli"]
 
 [dependencies]
 structopt = "0.3"

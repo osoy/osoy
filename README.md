@@ -1,6 +1,9 @@
-<div align='center'>
-  <img alt='logo' src='./logo.svg' height="64" />
-  <h1>Osoy</h1>
+<div align="center">
+  <h1>
+    <img src="./logo.svg" />
+    <br />
+    Osoy
+  </h1>
   <p>Command-line git repository manager.</p>
 </div>
 
