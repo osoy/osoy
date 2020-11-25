@@ -1,6 +1,5 @@
 use crate::opt::{Operator, Opt, StructOpt};
-use crate::util;
-use crate::Config;
+use crate::{util, Config};
 
 pub fn operate(opt: Opt, config: Config) {
     match opt.operator {
@@ -22,7 +21,7 @@ pub fn operate(opt: Opt, config: Config) {
                         .ok()
                         .map(|rel| println!("{}", rel.display()));
                 }),
-            Err(err) => eprintln!("{}", err),
+            Err(err) => info!("could not access '{}': {}", config.src.display(), err),
         },
 
         _ => todo!(),

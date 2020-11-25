@@ -1,3 +1,6 @@
+#[macro_use]
+mod out;
+
 mod config;
 mod location;
 mod operate;
