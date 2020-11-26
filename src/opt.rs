@@ -13,8 +13,6 @@ pub use structopt::StructOpt;
 pub struct Opt {
     #[structopt(subcommand)]
     pub operator: Operator,
-    #[structopt(short, long, help = "Enable colored output")]
-    pub color: bool,
 }
 
 #[derive(StructOpt, Debug)]
