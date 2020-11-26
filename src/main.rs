@@ -3,17 +3,15 @@ mod out;
 
 mod config;
 mod location;
-mod operate;
-mod opt;
+mod operator;
 mod util;
 
 pub use config::Config;
 pub use location::Location;
-use operate::operate;
-use opt::{Opt, StructOpt};
+use operator::{Operator, StructOpt};
 
 fn main() {
-    let opt = Opt::from_args();
+    let operator = Operator::from_args();
     let config = Config::from_env();
-    operate(opt, config);
+    operator.exec(&config);
 }
