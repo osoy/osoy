@@ -1,3 +1,4 @@
+use crate::Location;
 use std::path::{Path, PathBuf};
 use std::{io, iter};
 
@@ -13,4 +14,47 @@ pub fn iter_repos(dir: &Path) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
                 .flatten(),
         ),
     })
+}
+
+pub fn iter_repos_matching(
+    dir: &Path,
+    targets: Vec<Location>,
+    regex: bool,
+) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
+    Ok(Box::new(iter_repos(dir)?.filter(move |path| {
+        targets.len() == 0
+            || targets.iter().any(|location| match regex {
+                true => location.matches_re(&path),
+                false => location.matches(&path),
+            })
+    })))
+}
+
+pub fn unique_repo(dir: &Path, targets: Vec<Location>, regex: bool) -> io::Result<PathBuf> {
+    match iter_repos_matching(dir, targets, regex) {
+        Ok(repos) => {
+            let mut repo = None;
+            for path in repos {
+                if repo.is_none() {
+                    repo = Some(path);
+                } else {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        "multiple entities match query",
+                    ));
+                }
+            }
+            match repo {
+                Some(repo) => Ok(repo),
+                None => Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "no entries match query",
+                )),
+            }
+        }
+        Err(err) => Err(io::Error::new(
+            err.kind(),
+            format!("could not access '{}': {}", dir.display(), err),
+        )),
+    }
 }

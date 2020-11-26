@@ -8,6 +8,7 @@ const HOME_VAR: &str = "USERPROFILE";
 
 const OSOY_HOME_VAR: &str = "OSOY_HOME";
 
+#[derive(Debug, Clone)]
 pub struct Config {
     pub src: PathBuf,
     pub bin: PathBuf,
