@@ -1,6 +1,7 @@
 mod completions;
 mod execute;
 mod list;
+mod locate;
 mod new;
 
 use crate::{Config, Exec, StructOpt};
@@ -24,25 +25,31 @@ pub enum Operator {
         #[structopt(flatten)]
         opt: list::List,
     },
+    Execute {
+        #[structopt(flatten)]
+        opt: execute::Execute,
+    },
+    Locate {
+        #[structopt(flatten)]
+        opt: locate::Locate,
+    },
 
     New {
         #[structopt(flatten)]
         opt: new::New,
     },
-
-    Execute {
-        #[structopt(flatten)]
-        opt: execute::Execute,
-    },
 }
+
+use Operator::*;
 
 impl Exec for Operator {
     fn exec(self, config: Config) {
         match self {
-            Operator::Completions { opt } => opt.exec(config),
-            Operator::List { opt } => opt.exec(config),
-            Operator::New { opt } => opt.exec(config),
-            Operator::Execute { opt } => opt.exec(config),
+            Completions { opt } => opt.exec(config),
+            List { opt } => opt.exec(config),
+            New { opt } => opt.exec(config),
+            Execute { opt } => opt.exec(config),
+            Locate { opt } => opt.exec(config),
         }
     }
 }

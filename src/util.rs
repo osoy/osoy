@@ -30,8 +30,8 @@ pub fn iter_repos_matching(
     })))
 }
 
-pub fn unique_repo(dir: &Path, targets: Vec<Location>, regex: bool) -> io::Result<PathBuf> {
-    match iter_repos_matching(dir, targets, regex) {
+pub fn unique_repo(dir: &Path, target: Location, regex: bool) -> io::Result<PathBuf> {
+    match iter_repos_matching(dir, vec![target], regex) {
         Ok(repos) => {
             let mut repo = None;
             for path in repos {

@@ -19,7 +19,7 @@ pub struct Execute {
 
 impl Exec for Execute {
     fn exec(self, config: Config) {
-        match util::unique_repo(&config.src, vec![self.target], self.regex) {
+        match util::unique_repo(&config.src, self.target, self.regex) {
             Ok(path) => match self.print {
                 false => match set_current_dir(&path) {
                     Ok(_) => match process::Command::new(&self.command)
