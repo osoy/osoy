@@ -31,7 +31,7 @@ pub fn iter_repos_matching(
 }
 
 pub fn unique_repo(dir: &Path, target: Location, regex: bool) -> io::Result<PathBuf> {
-    match iter_repos_matching(dir, vec![target], regex) {
+    match iter_repos_matching(dir, vec![target.clone()], regex) {
         Ok(repos) => {
             let mut repo = None;
             for path in repos {
@@ -48,7 +48,7 @@ pub fn unique_repo(dir: &Path, target: Location, regex: bool) -> io::Result<Path
                 Some(repo) => Ok(repo),
                 None => Err(io::Error::new(
                     io::ErrorKind::NotFound,
-                    "no entries match query",
+                    format!("no entries match query '{}'", target),
                 )),
             }
         }

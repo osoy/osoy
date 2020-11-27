@@ -59,7 +59,7 @@ impl Location {
     pub fn matches_re(&self, path: &Path) -> bool {
         let mut path = PathBuf::from(path);
         for word in self.id.iter().rev() {
-            if Regex::new(&format!("^{}$", word))
+            if Regex::new(&format!("^({})$", word))
                 .map(|re| {
                     re.is_match(
                         path.file_name()

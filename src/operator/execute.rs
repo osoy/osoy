@@ -19,33 +19,42 @@ pub struct Execute {
 
 impl Exec for Execute {
     fn exec(self, config: Config) {
-        match util::unique_repo(&config.src, self.target, self.regex) {
-            Ok(path) => match self.print {
-                false => match set_current_dir(&path) {
-                    Ok(_) => match process::Command::new(&self.command)
-                        .args(&self.arguments)
-                        .status()
-                    {
-                        Ok(status) => info!(
-                            "{} exit: {}",
+        match util::iter_repos_matching(&config.src, vec![self.target.clone()], self.regex) {
+            Ok(repos) => {
+                let mut found_match = false;
+                for path in repos {
+                    found_match = true;
+                    match self.print {
+                        false => match set_current_dir(&path) {
+                            Ok(_) => match process::Command::new(&self.command)
+                                .args(&self.arguments)
+                                .status()
+                            {
+                                Ok(status) => info!(
+                                    "{} exit: {}",
+                                    self.command,
+                                    status
+                                        .code()
+                                        .map(|c| c.to_string())
+                                        .unwrap_or("none".into())
+                                ),
+                                Err(err) => info!("failed to execute '{}': {}", self.command, err),
+                            },
+                            Err(err) => info!("could not access '{}': {}", path.display(), err),
+                        },
+                        true => println!(
+                            "cd {} && {} {}",
+                            path.display(),
                             self.command,
-                            status
-                                .code()
-                                .map(|c| c.to_string())
-                                .unwrap_or("none".into())
+                            self.arguments.join(" ")
                         ),
-                        Err(err) => info!("failed to execute '{}': {}", self.command, err),
-                    },
-                    Err(err) => info!("could not access '{}': {}", path.display(), err),
-                },
-                true => println!(
-                    "cd {} && {} {}",
-                    path.display(),
-                    self.command,
-                    self.arguments.join(" ")
-                ),
-            },
-            Err(err) => info!("{}", err),
+                    }
+                }
+                if !found_match {
+                    info!("no entities match query '{}'", self.target);
+                }
+            }
+            Err(err) => info!("could not access '{}': {}", config.src.display(), err),
         }
     }
 }
