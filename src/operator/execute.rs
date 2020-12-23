@@ -4,7 +4,7 @@ use std::process;
 
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(aliases = &["ex", "exec"], about = "Execute command in a repository")]
-pub struct Execute {
+pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
     pub regex: bool,
     #[structopt(short, long, help = "Print command instead of executing")]
@@ -17,7 +17,7 @@ pub struct Execute {
     pub arguments: Vec<String>,
 }
 
-impl Exec for Execute {
+impl Exec for Opt {
     fn exec(self, config: Config) {
         match util::iter_repos_matching(&config.src, vec![self.target.clone()], self.regex) {
             Ok(repos) => {

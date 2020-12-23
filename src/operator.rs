@@ -1,55 +1,40 @@
-mod completions;
-mod execute;
-mod list;
-mod locate;
-mod new;
-
 use crate::{Config, Exec, StructOpt};
 use structopt::clap::AppSettings;
 
-#[derive(StructOpt, Debug)]
-#[structopt(
-    about = "Manage git repositories",
-    global_settings = &[
-        AppSettings::VersionlessSubcommands,
-        AppSettings::ColorNever,
-    ],
-)]
-pub enum Operator {
-    Completions {
-        #[structopt(flatten)]
-        opt: completions::Completions,
-    },
+macro_rules! operator {
+    ($($oper:tt),*) => {
+        $(
+            mod $oper;
+        )*
 
-    List {
-        #[structopt(flatten)]
-        opt: list::List,
-    },
-    Execute {
-        #[structopt(flatten)]
-        opt: execute::Execute,
-    },
-    Locate {
-        #[structopt(flatten)]
-        opt: locate::Locate,
-    },
+        #[derive(StructOpt, Debug)]
+        #[structopt(
+            about = "Manage git repositories",
+            global_settings = &[
+                AppSettings::VersionlessSubcommands,
+                AppSettings::ColorNever,
+            ],
+        )]
+        pub enum Operator {
+            $(
+                #[allow(non_camel_case_types)]
+                $oper {
+                    #[structopt(flatten)]
+                    opt: $oper::Opt,
+                },
+            )*
+        }
 
-    New {
-        #[structopt(flatten)]
-        opt: new::New,
-    },
-}
-
-use Operator::*;
-
-impl Exec for Operator {
-    fn exec(self, config: Config) {
-        match self {
-            Completions { opt } => opt.exec(config),
-            List { opt } => opt.exec(config),
-            New { opt } => opt.exec(config),
-            Execute { opt } => opt.exec(config),
-            Locate { opt } => opt.exec(config),
+        impl Exec for Operator {
+            fn exec(self, config: Config) {
+                match self {
+                    $(
+                        Operator::$oper { opt } => opt.exec(config),
+                    )*
+                }
+            }
         }
     }
 }
+
+operator!(completions, execute, list, locate, new);
