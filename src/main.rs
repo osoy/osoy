@@ -1,11 +1,11 @@
 #[macro_use]
-mod out;
+mod cli;
 
 mod config;
 mod exec;
 mod location;
 mod operator;
-mod util;
+mod repos;
 
 use config::Config;
 use exec::Exec;

@@ -1,4 +1,5 @@
 use crate::{Config, Exec, Location, StructOpt};
+use git2::Repository;
 
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(alias = "n", about = "Create new empty git repositories")]
@@ -10,10 +11,10 @@ pub struct Opt {
 impl Exec for Opt {
     fn exec(self, config: Config) {
         for location in self.targets {
-            let path = &config.src.join(location.id());
+            let path = config.src.join(location.id());
             match path.exists() {
                 true => info!("entity '{}' already exists", path.display()),
-                false => match git2::Repository::init(&path) {
+                false => match Repository::init(path) {
                     Ok(repo) => match repo.remote("origin", &location.url()) {
                         Ok(_) => {}
                         Err(err) => info!("could not set remote: {}", err),

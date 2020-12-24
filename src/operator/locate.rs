@@ -1,4 +1,4 @@
-use crate::{util, Config, Exec, Location, StructOpt};
+use crate::{repos, Config, Exec, Location, StructOpt};
 
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(about = "Print repository's full path")]
@@ -11,7 +11,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match util::unique_repo(&config.src, self.target, self.regex) {
+        match repos::unique_repo(&config.src, self.target, self.regex) {
             Ok(path) => println!("{}", path.display()),
             Err(err) => info!("{}", err),
         }

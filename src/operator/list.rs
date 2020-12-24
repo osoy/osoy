@@ -1,4 +1,4 @@
-use crate::{util, Config, Exec, Location, StructOpt};
+use crate::{repos, Config, Exec, Location, StructOpt};
 
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(alias = "ls", about = "List repositories")]
@@ -11,13 +11,13 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match util::iter_repos_matching(&config.src, self.targets, self.regex) {
+        match repos::iter_repos_matching(&config.src, self.targets, self.regex) {
             Ok(iter) => iter.for_each(|path| {
                 path.strip_prefix(&config.src)
                     .ok()
                     .map(|rel| println!("{}", rel.display()));
             }),
-            Err(err) => info!("could not access '{}': {}", &config.src.display(), err),
+            Err(err) => info!("could not access '{}': {}", config.src.display(), err),
         }
     }
 }

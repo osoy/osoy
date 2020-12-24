@@ -1,4 +1,4 @@
-use crate::{util, Config, Exec, Location, StructOpt};
+use crate::{repos, Config, Exec, Location, StructOpt};
 use std::env::set_current_dir;
 use std::process;
 
@@ -19,7 +19,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match util::iter_repos_matching(&config.src, vec![self.target.clone()], self.regex) {
+        match repos::iter_repos_matching(&config.src, vec![self.target.clone()], self.regex) {
             Ok(repos) => {
                 let mut found_match = false;
                 for path in repos {
