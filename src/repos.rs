@@ -1,6 +1,6 @@
 use crate::Location;
 use std::path::{Path, PathBuf};
-use std::{io, iter};
+use std::{fs, io, iter};
 
 type GenericIter = Box<dyn Iterator<Item = PathBuf>>;
 
@@ -65,8 +65,26 @@ pub fn unique_repo(dir: &Path, target: Location, regex: bool) -> io::Result<Path
             Some(repo) => Ok(repo),
             None => Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                format!("no entities match query"),
+                "no entities match query",
             )),
         },
     }
+}
+
+fn remove_dir_rec(dir: &Path) -> usize {
+    match fs::remove_dir(dir) {
+        Ok(_) => match dir.parent() {
+            Some(parent) => remove_dir_rec(parent) + 1,
+            None => 1,
+        },
+        Err(_) => 0,
+    }
+}
+
+pub fn remove_repo(dir: &Path) -> io::Result<usize> {
+    fs::remove_dir_all(dir).map(|_| {
+        dir.parent()
+            .map(|parent| remove_dir_rec(parent))
+            .unwrap_or(0)
+    })
 }

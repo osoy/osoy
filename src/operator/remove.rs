@@ -1,5 +1,4 @@
 use crate::{repos, Config, Exec, Location, StructOpt};
-use std::fs;
 
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(alias = "rm", about = "Remove repositories")]
@@ -21,10 +20,18 @@ impl Exec for Opt {
                 for path in iter {
                     let path_display = path.strip_prefix(&config.src).unwrap().display();
                     if self.force || ask!("remove '{}'?", path_display) {
-                        match fs::remove_dir_all(&path) {
-                            Ok(_) => {
+                        match repos::remove_repo(&path) {
+                            Ok(parents) => {
                                 if self.verbose {
-                                    info!("removed '{}'", path_display)
+                                    info!(
+                                        "removed '{}'{}",
+                                        path_display,
+                                        match parents {
+                                            0 => "".into(),
+                                            _ =>
+                                                format!(" and {} empty parent directories", parents),
+                                        }
+                                    );
                                 }
                             }
                             Err(err) => info!("could not remove '{}': {}", path.display(), err),
