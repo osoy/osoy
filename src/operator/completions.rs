@@ -2,11 +2,11 @@ use super::Operator;
 use crate::{Config, Exec, StructOpt};
 use structopt::clap::Shell;
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Debug)]
 #[structopt(about = "Generate shell completion script")]
 pub struct Opt {
     #[structopt(possible_values = &Shell::variants())]
-    pub shell: Shell,
+    shell: Shell,
 }
 
 impl Exec for Opt {

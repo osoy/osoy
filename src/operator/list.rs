@@ -1,13 +1,13 @@
 use crate::{repos, Config, Exec, Location, StructOpt};
 use std::io;
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Debug)]
 #[structopt(alias = "ls", about = "List repositories")]
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
-    pub regex: bool,
+    regex: bool,
     #[structopt(help = Location::about())]
-    pub targets: Vec<Location>,
+    targets: Vec<Location>,
 }
 
 impl Exec for Opt {

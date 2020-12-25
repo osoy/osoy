@@ -1,16 +1,16 @@
 use crate::{repos, Config, Exec, Location, StructOpt};
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Debug)]
 #[structopt(alias = "rm", about = "Remove repositories")]
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
-    pub regex: bool,
+    regex: bool,
     #[structopt(short, long, help = "Do not prompt")]
-    pub force: bool,
+    force: bool,
     #[structopt(short, long, help = "Print what is being done")]
-    pub verbose: bool,
+    verbose: bool,
     #[structopt(required = true, min_values = 1, help = Location::about())]
-    pub targets: Vec<Location>,
+    targets: Vec<Location>,
 }
 
 impl Exec for Opt {

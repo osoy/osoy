@@ -2,7 +2,7 @@ use crate::{repos, Config, Exec, Location, StructOpt};
 use std::env::set_current_dir;
 use std::process;
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Debug)]
 #[structopt(aliases = &["ex", "exec"], about = "Execute command in a repository")]
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]

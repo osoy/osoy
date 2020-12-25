@@ -1,11 +1,11 @@
 use crate::{Config, Exec, Location, StructOpt};
 use git2::Repository;
 
-#[derive(StructOpt, Debug, Clone)]
+#[derive(StructOpt, Debug)]
 #[structopt(alias = "n", about = "Create new empty git repositories")]
 pub struct Opt {
     #[structopt(required = true, min_values = 1, help = Location::about())]
-    pub targets: Vec<Location>,
+    targets: Vec<Location>,
 }
 
 impl Exec for Opt {
