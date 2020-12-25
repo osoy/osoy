@@ -47,7 +47,7 @@ pub fn iter_repos_matching_exists(
     match repos.next() {
         Some(first) => Ok(Box::new(iter::once(first).chain(repos))),
         None => Err(io::Error::new(
-            io::ErrorKind::NotFound,
+            io::ErrorKind::Other,
             "no matching entities found",
         )),
     }
@@ -64,7 +64,7 @@ pub fn unique_repo(dir: &Path, target: Location, regex: bool) -> io::Result<Path
         None => match repo {
             Some(repo) => Ok(repo),
             None => Err(io::Error::new(
-                io::ErrorKind::NotFound,
+                io::ErrorKind::Other,
                 "no entities match query",
             )),
         },
