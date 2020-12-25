@@ -16,7 +16,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::iter_repos_matching(&config.src, self.targets, self.regex) {
+        match repos::iter_repos_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
                 for path in iter {
                     let path_display = path.strip_prefix(&config.src).unwrap().display();
@@ -32,7 +32,7 @@ impl Exec for Opt {
                     }
                 }
             }
-            Err(err) => info!("could not access '{}': {}", config.src.display(), err),
+            Err(err) => info!("{}", err),
         }
     }
 }

@@ -17,7 +17,7 @@ impl Exec for Opt {
                     .ok()
                     .map(|rel| println!("{}", rel.display()));
             }),
-            Err(err) => info!("could not access '{}': {}", config.src.display(), err),
+            Err(err) => info!("{}", err),
         }
     }
 }
