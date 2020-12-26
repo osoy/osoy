@@ -2,7 +2,7 @@ use crate::{Config, Exec, Location, StructOpt};
 use git2::Repository;
 
 #[derive(StructOpt, Debug)]
-#[structopt(alias = "n", about = "Create new empty git repositories")]
+#[structopt(about = "Clone from remote repositories")]
 pub struct Opt {
     #[structopt(short, long, help = "Print what is being done")]
     verbose: bool,
@@ -17,16 +17,13 @@ impl Exec for Opt {
             if path.exists() {
                 info!("entity '{}' already exists", location.id())
             } else {
-                match Repository::init(path) {
-                    Ok(repo) => {
+                match Repository::clone(&location.url(), path) {
+                    Ok(_) => {
                         if self.verbose {
-                            info!("new repository created '{}'", location.id());
-                        }
-                        if let Err(err) = repo.remote("origin", &location.url()) {
-                            info!("could not set remote: {}", err);
+                            info!("repository cloned '{}'", location.id());
                         }
                     }
-                    Err(err) => info!("could not init: {}", err),
+                    Err(err) => info!("could not clone: {}", err),
                 }
             }
         }

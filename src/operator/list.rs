@@ -1,5 +1,4 @@
 use crate::{repos, Config, Exec, Location, StructOpt};
-use std::io;
 
 #[derive(StructOpt, Debug)]
 #[structopt(alias = "ls", about = "List repositories")]
@@ -18,10 +17,7 @@ impl Exec for Opt {
                     .ok()
                     .map(|rel| println!("{}", rel.display()));
             }),
-            Err(err) => match err.kind() {
-                io::ErrorKind::NotFound => info!("no repositories found"),
-                _ => info!("{}", err),
-            },
+            Err(err) => info!("{}", err),
         }
     }
 }

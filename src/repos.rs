@@ -19,7 +19,10 @@ pub fn iterate(dir: &Path) -> io::Result<GenericIter> {
             )),
             Err(err) => Err(io::Error::new(
                 err.kind(),
-                format!("could not access '{}': {}", dir.display(), err),
+                match err.kind() {
+                    io::ErrorKind::NotFound => format!("no repositories found"),
+                    _ => format!("could not access '{}': {}", dir.display(), err),
+                },
             )),
         },
     }
