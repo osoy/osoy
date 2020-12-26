@@ -15,10 +15,11 @@ impl Exec for Opt {
             match path.exists() {
                 true => info!("entity '{}' already exists", path.display()),
                 false => match Repository::init(path) {
-                    Ok(repo) => match repo.remote("origin", &location.url()) {
-                        Ok(_) => {}
-                        Err(err) => info!("could not set remote: {}", err),
-                    },
+                    Ok(repo) => {
+                        if let Err(err) = repo.remote("origin", &location.url()) {
+                            info!("could not set remote: {}", err);
+                        }
+                    }
                     Err(err) => info!("could not init: {}", err),
                 },
             }

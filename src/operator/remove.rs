@@ -21,23 +21,9 @@ impl Exec for Opt {
                     let path_display = path.strip_prefix(&config.src).unwrap().display();
                     if self.force || ask!("remove '{}'?", path_display) {
                         match repos::remove(&path) {
-                            Ok(parents) => {
+                            Ok(_) => {
                                 if self.verbose {
-                                    info!(
-                                        "removed '{}'{}",
-                                        path_display,
-                                        match parents {
-                                            0 => "".into(),
-                                            _ => format!(
-                                                " and {} empty director{}",
-                                                parents,
-                                                match parents {
-                                                    1 => "y",
-                                                    _ => "ies",
-                                                }
-                                            ),
-                                        }
-                                    );
+                                    info!("removed '{}'", path_display);
                                 }
                             }
                             Err(err) => info!("could not remove '{}': {}", path.display(), err),
