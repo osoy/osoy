@@ -11,7 +11,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::unique_repo(&config.src, self.target, self.regex) {
+        match repos::unique(&config.src, self.target, self.regex) {
             Ok(path) => println!("{}", path.display()),
             Err(err) => info!("{}", err),
         }

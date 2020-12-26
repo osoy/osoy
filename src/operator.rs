@@ -37,4 +37,4 @@ macro_rules! operator {
     }
 }
 
-operator!(completions, execute, list, locate, new, remove);
+operator!(completions, execute, list, locate, new, remove, rename);

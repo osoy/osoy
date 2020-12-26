@@ -15,12 +15,12 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::iter_repos_matching_exists(&config.src, self.targets, self.regex) {
+        match repos::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
                 for path in iter {
                     let path_display = path.strip_prefix(&config.src).unwrap().display();
                     if self.force || ask!("remove '{}'?", path_display) {
-                        match repos::remove_repo(&path) {
+                        match repos::remove(&path) {
                             Ok(parents) => {
                                 if self.verbose {
                                     info!(
@@ -28,8 +28,14 @@ impl Exec for Opt {
                                         path_display,
                                         match parents {
                                             0 => "".into(),
-                                            _ =>
-                                                format!(" and {} empty parent directories", parents),
+                                            _ => format!(
+                                                " and {} empty director{}",
+                                                parents,
+                                                match parents {
+                                                    1 => "y",
+                                                    _ => "ies",
+                                                }
+                                            ),
                                         }
                                     );
                                 }

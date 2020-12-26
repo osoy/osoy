@@ -4,7 +4,8 @@ use std::{fs, io, iter};
 
 type GenericIter = Box<dyn Iterator<Item = PathBuf>>;
 
-pub fn iter_repos(dir: &Path) -> io::Result<GenericIter> {
+/// Get recursive iterator over git repositories in given directory.
+pub fn iterate(dir: &Path) -> io::Result<GenericIter> {
     match dir.join(".git").exists() {
         true => Ok(Box::new(iter::once(dir.into()))),
         false => match dir.read_dir() {
@@ -13,7 +14,7 @@ pub fn iter_repos(dir: &Path) -> io::Result<GenericIter> {
                     .filter_map(Result::ok)
                     .map(|entry| entry.path())
                     .filter(|path| path.is_dir())
-                    .filter_map(|dir| iter_repos(&dir).ok())
+                    .filter_map(|dir| iterate(&dir).ok())
                     .flatten(),
             )),
             Err(err) => Err(io::Error::new(
@@ -24,12 +25,13 @@ pub fn iter_repos(dir: &Path) -> io::Result<GenericIter> {
     }
 }
 
-pub fn iter_repos_matching(
+/// Get iterator over repositories that match any of the given targets.
+pub fn iterate_matching(
     dir: &Path,
     targets: Vec<Location>,
     regex: bool,
 ) -> io::Result<GenericIter> {
-    Ok(Box::new(iter_repos(dir)?.filter(move |path| {
+    Ok(Box::new(iterate(dir)?.filter(move |path| {
         targets.len() == 0
             || targets.iter().any(|location| match regex {
                 true => location.matches_re(&path),
@@ -38,12 +40,13 @@ pub fn iter_repos_matching(
     })))
 }
 
-pub fn iter_repos_matching_exists(
+/// Same as `iterate_matching` except returns error if no matching repositories found.
+pub fn iterate_matching_exists(
     dir: &Path,
     targets: Vec<Location>,
     regex: bool,
 ) -> io::Result<GenericIter> {
-    let mut repos = iter_repos_matching(dir, targets, regex)?;
+    let mut repos = iterate_matching(dir, targets, regex)?;
     match repos.next() {
         Some(first) => Ok(Box::new(iter::once(first).chain(repos))),
         None => Err(io::Error::new(
@@ -53,8 +56,9 @@ pub fn iter_repos_matching_exists(
     }
 }
 
-pub fn unique_repo(dir: &Path, target: Location, regex: bool) -> io::Result<PathBuf> {
-    let mut repos = iter_repos_matching(dir, vec![target.clone()], regex)?;
+/// Get an unique repository in directory otherwise return error.
+pub fn unique(dir: &Path, target: Location, regex: bool) -> io::Result<PathBuf> {
+    let mut repos = iterate_matching(dir, vec![target.clone()], regex)?;
     let repo = repos.next();
     match repos.next() {
         Some(_) => Err(io::Error::new(
@@ -71,6 +75,7 @@ pub fn unique_repo(dir: &Path, target: Location, regex: bool) -> io::Result<Path
     }
 }
 
+/// Remove empty directories recursively returning remove count.
 fn remove_dir_rec(dir: &Path) -> usize {
     match fs::remove_dir(dir) {
         Ok(_) => match dir.parent() {
@@ -81,10 +86,26 @@ fn remove_dir_rec(dir: &Path) -> usize {
     }
 }
 
-pub fn remove_repo(dir: &Path) -> io::Result<usize> {
+/// Remove directory and parent directories if empty returning count of removed parent directories.
+pub fn remove(dir: &Path) -> io::Result<usize> {
     fs::remove_dir_all(dir).map(|_| {
         dir.parent()
             .map(|parent| remove_dir_rec(parent))
             .unwrap_or(0)
     })
+}
+
+/// Rename directory and remove previous parent directories if empty.
+pub fn rename(target: &Path, dest: &Path) -> io::Result<usize> {
+    dest.parent().map(|parent| fs::create_dir_all(parent));
+    match fs::rename(target, dest) {
+        Ok(_) => Ok(target
+            .parent()
+            .map(|parent| remove_dir_rec(parent))
+            .unwrap_or(0)),
+        Err(err) => {
+            dest.parent().map(|parent| remove_dir_rec(parent));
+            Err(err)
+        }
+    }
 }

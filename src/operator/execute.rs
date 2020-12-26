@@ -19,10 +19,9 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::iter_repos_matching_exists(&config.src, vec![self.target.clone()], self.regex)
-        {
-            Ok(repos) => {
-                for path in repos {
+        match repos::iterate_matching_exists(&config.src, vec![self.target.clone()], self.regex) {
+            Ok(iter) => {
+                for path in iter {
                     match set_current_dir(&path) {
                         Ok(_) => match process::Command::new(&self.command)
                             .args(&self.arguments)

@@ -12,7 +12,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::iter_repos_matching_exists(&config.src, self.targets, self.regex) {
+        match repos::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => iter.for_each(|path| {
                 path.strip_prefix(&config.src)
                     .ok()
