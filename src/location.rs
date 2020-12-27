@@ -5,7 +5,7 @@ use std::{error, fmt};
 
 #[derive(Debug, PartialEq, Clone)]
 enum Protocol {
-    Git,
+    Ssh(String),
     Other(String),
 }
 
@@ -41,11 +41,11 @@ impl Location {
     pub fn url(&self) -> String {
         match &self.protocol {
             Some(Protocol::Other(p)) => format!("{}://{}", p, self.id.join("/")),
-            Some(Protocol::Git) => format!(
+            Some(Protocol::Ssh(user)) => format!(
                 "{}{}",
                 self.id
                     .get(0)
-                    .map(|domain| format!("git@{}:", domain))
+                    .map(|domain| format!("{}@{}:", user, domain))
                     .unwrap_or("".to_string()),
                 self.id
                     .get(1..)
@@ -123,22 +123,24 @@ impl FromStr for Location {
             Err(ParseLocationError {})
         } else {
             let re_other = Regex::new("^([^:/]+)://").unwrap();
-            let re_git = Regex::new("^git@([^:]+):|^([^:/@]+):").unwrap();
+            let re_git = Regex::new("^([^@]+)@([^:]+):|^([^:/@]+):").unwrap();
 
             let protocol;
             let id: Vec<String>;
 
-            if re_other.is_match(s) {
-                protocol = Some(Protocol::Other(re_other.captures(s).unwrap()[1].into()));
+            if let Some(caps) = re_other.captures(s) {
+                protocol = Some(Protocol::Other(caps[1].into()));
                 id = re_other
                     .replace(s, "")
                     .split("/")
                     .map(|s| s.to_owned())
                     .collect();
-            } else if re_git.is_match(s) {
-                protocol = Some(Protocol::Git);
+            } else if let Some(caps) = re_git.captures(s) {
+                protocol = Some(Protocol::Ssh(
+                    caps.get(1).map(|user| user.into()).unwrap_or("git").into(),
+                ));
                 id = re_git
-                    .replace(s, "$1$2/")
+                    .replace(s, "$2$3/")
                     .split("/")
                     .map(|s| s.to_owned())
                     .collect();
@@ -176,6 +178,12 @@ mod tests {
             "git@gitlab.com:rasmusmerzin/archer",
             "gitlab.com/rasmusmerzin/archer",
             "gitlab.com/rasmusmerzin/archer",
+        );
+        check(
+            "gituser@gitlab.com:rasmusmerzin/fr3",
+            "gituser@gitlab.com:rasmusmerzin/fr3",
+            "gitlab.com/rasmusmerzin/fr3",
+            "gitlab.com/rasmusmerzin/fr3",
         );
     }
 
