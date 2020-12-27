@@ -100,15 +100,23 @@ pub fn remove(dir: &Path) -> io::Result<usize> {
 
 /// Rename directory and remove previous parent directories if empty.
 pub fn rename(target: &Path, dest: &Path) -> io::Result<usize> {
-    dest.parent().map(|parent| fs::create_dir_all(parent));
-    match fs::rename(target, dest) {
-        Ok(_) => Ok(target
-            .parent()
-            .map(|parent| remove_dir_rec(parent))
-            .unwrap_or(0)),
-        Err(err) => {
-            dest.parent().map(|parent| remove_dir_rec(parent));
-            Err(err)
+    match dest.exists() {
+        true => Err(io::Error::new(
+            io::ErrorKind::AlreadyExists,
+            "destination entity already exists",
+        )),
+        false => {
+            dest.parent().map(|parent| fs::create_dir_all(parent));
+            match fs::rename(target, dest) {
+                Ok(_) => Ok(target
+                    .parent()
+                    .map(|parent| remove_dir_rec(parent))
+                    .unwrap_or(0)),
+                Err(err) => {
+                    dest.parent().map(|parent| remove_dir_rec(parent));
+                    Err(err)
+                }
+            }
         }
     }
 }
