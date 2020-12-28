@@ -4,7 +4,7 @@ macro_rules! info {
     };
 }
 
-macro_rules! ask {
+macro_rules! ask_bool {
     ($($arg:tt)*) => {
         {
             eprint!("{}: {} ", env!("CARGO_PKG_NAME"), format!($($arg)*));
@@ -19,6 +19,16 @@ macro_rules! ask {
                     false
                 }
             }
+        }
+    };
+}
+
+macro_rules! ask_string {
+    ($($arg:tt)*) => {
+        {
+            eprint!("{}: {} ", env!("CARGO_PKG_NAME"), format!($($arg)*));
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input).map(|_| String::from(input.trim_end_matches('\n')))
         }
     };
 }

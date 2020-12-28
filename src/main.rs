@@ -1,6 +1,7 @@
 #[macro_use]
 mod cli;
 
+mod auth;
 mod config;
 mod exec;
 mod location;

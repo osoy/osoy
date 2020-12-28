@@ -1,5 +1,5 @@
-use std::env;
 use std::path::PathBuf;
+use std::{env, io};
 
 #[cfg(target_family = "unix")]
 const HOME_VAR: &str = "HOME";
@@ -14,18 +14,23 @@ pub struct Config {
     pub bin: PathBuf,
 }
 
+pub fn home_path(rel_path: &str) -> io::Result<PathBuf> {
+    let env_home = env::var(HOME_VAR).unwrap();
+    match env_home.len() {
+        0 => Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            "HOME variable not set",
+        )),
+        _ => Ok(PathBuf::from(env_home).join(rel_path)),
+    }
+}
+
 impl Config {
     pub fn from_env() -> Self {
         let home = {
             let env_osoy_home = env::var(OSOY_HOME_VAR).unwrap_or("".into());
             match env_osoy_home.len() {
-                0 => {
-                    let env_home = env::var(HOME_VAR).unwrap();
-                    match env_home.len() {
-                        0 => panic!("HOME variable not set"),
-                        _ => PathBuf::from(env_home).join(".osoy"),
-                    }
-                }
+                0 => home_path(".osoy").unwrap(),
                 _ => env_osoy_home.into(),
             }
         };

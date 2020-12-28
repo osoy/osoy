@@ -19,7 +19,7 @@ impl Exec for Opt {
             Ok(iter) => {
                 for path in iter {
                     let path_display = path.strip_prefix(&config.src).unwrap().display();
-                    if self.force || ask!("remove '{}'?", path_display) {
+                    if self.force || ask_bool!("remove '{}'?", path_display) {
                         match repos::remove(&path) {
                             Ok(_) => {
                                 if self.verbose {

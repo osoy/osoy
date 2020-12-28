@@ -1,5 +1,6 @@
-use crate::{Config, Exec, Location, StructOpt};
-use git2::Repository;
+use crate::{auth, Config, Exec, Location, StructOpt};
+use git2::build::RepoBuilder;
+use git2::{FetchOptions, RemoteCallbacks};
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Clone from remote repositories")]
@@ -13,14 +14,30 @@ pub struct Opt {
 impl Exec for Opt {
     fn exec(self, config: Config) {
         for location in self.targets {
-            let path = config.src.join(location.id());
+            let id = location.id();
+            let path = config.src.join(&id);
             if path.exists() {
-                info!("entity '{}' already exists", location.id())
+                info!("entity '{}' already exists", &id)
             } else {
-                match Repository::clone(&location.url(), path) {
+                let mut callbacks = RemoteCallbacks::new();
+
+                {
+                    let id = id.clone();
+                    callbacks.credentials(move |_, username, allowed_types| {
+                        auth::credentials(&id, username, allowed_types)
+                    });
+                }
+
+                let mut options = FetchOptions::new();
+                options.remote_callbacks(callbacks);
+
+                let mut builder = RepoBuilder::new();
+                builder.fetch_options(options);
+
+                match builder.clone(&location.url(), &path) {
                     Ok(_) => {
                         if self.verbose {
-                            info!("repository cloned '{}'", location.id());
+                            info!("repository cloned '{}'", id);
                         }
                     }
                     Err(err) => info!("could not clone: {}", err),
