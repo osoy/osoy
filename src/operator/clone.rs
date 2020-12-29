@@ -1,10 +1,13 @@
 use crate::{auth, Config, Exec, Location, StructOpt};
 use git2::build::RepoBuilder;
 use git2::{FetchOptions, RemoteCallbacks};
+use std::io::{stdout, Write};
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Clone from remote repositories")]
 pub struct Opt {
+    #[structopt(short, long, help = "Print what is being done")]
+    verbose: bool,
     #[structopt(required = true, min_values = 1, help = Location::about())]
     targets: Vec<Location>,
 }
@@ -26,15 +29,43 @@ impl Exec for Opt {
                     });
                 }
 
+                {
+                    let id = id.clone();
+                    callbacks.transfer_progress(move |stats| {
+                        let total = stats.total_objects();
+                        let recieved = stats.received_objects();
+                        let indexed = stats.indexed_objects();
+                        eprint!(
+                            "{:3}% {:3}% {}\r",
+                            100 * recieved / total,
+                            100 * indexed / total,
+                            id,
+                        );
+                        stdout().flush().ok();
+                        true
+                    });
+                }
+
                 let mut options = FetchOptions::new();
                 options.remote_callbacks(callbacks);
 
-                let mut builder = RepoBuilder::new();
-                builder.fetch_options(options);
+                let res = RepoBuilder::new()
+                    .fetch_options(options)
+                    .clone(&location.url(), &path);
 
-                match builder.clone(&location.url(), &path) {
-                    Ok(_) => info!("repository cloned '{}'", id),
-                    Err(err) => info!("could not clone: {}", err),
+                print!("\u{1b}[K");
+
+                match res {
+                    Ok(_) => println!("{:10}{}", "done", id),
+                    Err(err) => println!(
+                        "{:10}{}{}",
+                        "failed",
+                        id,
+                        match self.verbose {
+                            false => "".into(),
+                            true => format!("\n{:10}{}", "", err),
+                        }
+                    ),
                 }
             }
         }
