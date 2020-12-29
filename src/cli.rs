@@ -4,31 +4,57 @@ macro_rules! info {
     };
 }
 
-macro_rules! ask_bool {
+macro_rules! ask_string {
     ($($arg:tt)*) => {
         {
-            eprint!("{}: {} ", env!("CARGO_PKG_NAME"), format!($($arg)*));
-            let mut input = String::new();
-            match std::io::stdin().read_line(&mut input) {
-                Ok(_) => match input.trim().to_lowercase().as_str() {
-                    "y" | "yes" => true,
-                    _ => false
-                }
-                Err(err) => {
-                    info!("could not read from stdin: {}", err);
-                    false
+            use termion::input::TermRead;
+
+            eprint!("{} ", format!($($arg)*));
+
+            let stdin = std::io::stdin();
+            let mut stdin = stdin.lock();
+
+            match stdin.read_line().ok().flatten() {
+                Some(line) => line,
+                None => {
+                    eprintln!();
+                    "".into()
                 }
             }
         }
     };
 }
 
-macro_rules! ask_string {
+macro_rules! ask_bool {
     ($($arg:tt)*) => {
         {
-            eprint!("{}: {} ", env!("CARGO_PKG_NAME"), format!($($arg)*));
-            let mut input = String::new();
-            std::io::stdin().read_line(&mut input).map(|_| String::from(input.trim_end_matches('\n')))
+            match ask_string!($($arg)*).trim().to_lowercase().as_str() {
+                "y" | "yes" => true,
+                _ => false,
+            }
+        }
+    };
+}
+
+macro_rules! ask_secret {
+    ($($arg:tt)*) => {
+        {
+            use termion::input::TermRead;
+
+            eprint!("{} ", format!($($arg)*));
+
+            let stdin = std::io::stdin();
+            let mut stdin = stdin.lock();
+            let stdout = std::io::stdout();
+            let mut stdout = stdout.lock();
+
+            let secret = stdin.read_passwd(&mut stdout)
+                .ok()
+                .flatten()
+                .unwrap_or("".into());
+
+            eprintln!();
+            secret
         }
     };
 }

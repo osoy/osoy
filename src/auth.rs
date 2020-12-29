@@ -12,16 +12,19 @@ pub fn credentials(
         Cred::ssh_key(
             &match username {
                 Some(name) => name.into(),
-                None => ask_string!("username for '{}':", &id).unwrap(),
+                None => ask_string!("username for '{}':", &id),
             },
             Some(&pubkey_path),
             &key_path,
-            Some(&ask_string!("enter passphrase for '{}':", key_path.display()).unwrap()),
+            Some(&ask_secret!(
+                "enter passphrase for '{}':",
+                key_path.display()
+            )),
         )
     } else if allowed_types.is_user_pass_plaintext() {
         Cred::userpass_plaintext(
-            &ask_string!("username for '{}':", &id).unwrap(),
-            &ask_string!("password for '{}':", &id).unwrap(),
+            &ask_string!("username for '{}':", &id),
+            &ask_secret!("password for '{}':", &id),
         )
     } else {
         unimplemented!()

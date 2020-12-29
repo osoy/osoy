@@ -5,8 +5,6 @@ use git2::{FetchOptions, RemoteCallbacks};
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Clone from remote repositories")]
 pub struct Opt {
-    #[structopt(short, long, help = "Print what is being done")]
-    verbose: bool,
     #[structopt(required = true, min_values = 1, help = Location::about())]
     targets: Vec<Location>,
 }
@@ -35,11 +33,7 @@ impl Exec for Opt {
                 builder.fetch_options(options);
 
                 match builder.clone(&location.url(), &path) {
-                    Ok(_) => {
-                        if self.verbose {
-                            info!("repository cloned '{}'", id);
-                        }
-                    }
+                    Ok(_) => info!("repository cloned '{}'", id),
                     Err(err) => info!("could not clone: {}", err),
                 }
             }
