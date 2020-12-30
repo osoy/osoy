@@ -1,7 +1,6 @@
-use crate::{config, Config, Exec, Location, StructOpt};
+use crate::{transfer, Config, Exec, Location, StructOpt};
 use git2::build::RepoBuilder;
-use git2::{Cred, FetchOptions, RemoteCallbacks};
-use std::io::{stdout, Write};
+use git2::{FetchOptions, RemoteCallbacks};
 use std::sync::{Arc, Mutex};
 
 #[derive(StructOpt, Debug)]
@@ -15,7 +14,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        let cached_ssh_password = Arc::new(Mutex::new(String::new()));
+        let cache = Arc::new(Mutex::new(transfer::cache()));
 
         for location in self.targets {
             let id = location.id();
@@ -25,61 +24,20 @@ impl Exec for Opt {
             } else {
                 let mut callbacks = RemoteCallbacks::new();
 
-                let ssh_password =
-                    Arc::new(Mutex::new(cached_ssh_password.lock().unwrap().clone()));
-
                 {
                     let id = id.clone();
-                    let mut tried = false;
-                    let ssh_password = ssh_password.clone();
-
+                    let cache = cache.clone();
                     callbacks.credentials(move |_, username, allowed_types| {
-                        if allowed_types.is_ssh_key() {
-                            let key_path = config::home_path(".ssh/id_rsa").unwrap();
-                            let pubkey_path = config::home_path(".ssh/id_rsa.pub").unwrap();
-
-                            let mut ssh_password = ssh_password.lock().unwrap();
-                            if tried {
-                                *ssh_password =
-                                    ask_secret!("password for '{}':", key_path.display());
-                            }
-                            tried = true;
-
-                            Cred::ssh_key(
-                                &match username {
-                                    Some(name) => name.into(),
-                                    None => ask_string!("username for '{}':", &id),
-                                },
-                                Some(&pubkey_path),
-                                &key_path,
-                                Some(&ssh_password.clone()),
-                            )
-                        } else if allowed_types.is_user_pass_plaintext() {
-                            Cred::userpass_plaintext(
-                                &ask_string!("username for '{}':", &id),
-                                &ask_secret!("password for '{}':", &id),
-                            )
-                        } else {
-                            unimplemented!()
-                        }
+                        cache
+                            .lock()
+                            .unwrap()
+                            .credentials(&id, username, allowed_types)
                     });
                 }
 
                 {
                     let id = id.clone();
-                    callbacks.transfer_progress(move |stats| {
-                        let total = stats.total_objects();
-                        let recieved = stats.received_objects();
-                        let indexed = stats.indexed_objects();
-                        eprint!(
-                            "{:3}% {:3}% {}\r",
-                            100 * recieved / total,
-                            100 * indexed / total,
-                            id,
-                        );
-                        stdout().flush().ok();
-                        true
-                    });
+                    callbacks.transfer_progress(move |stat| transfer::log_progress(&id, &stat));
                 }
 
                 let mut options = FetchOptions::new();
@@ -92,10 +50,7 @@ impl Exec for Opt {
                 print!("\u{1b}[K");
 
                 match res {
-                    Ok(_) => {
-                        *cached_ssh_password.lock().unwrap() = ssh_password.lock().unwrap().clone();
-                        println!("{:>9} {}", "done", id);
-                    }
+                    Ok(_) => println!("{:>9} {}", "done", id),
                     Err(err) => println!(
                         "{:>9} {}{}",
                         "failed",

@@ -6,6 +6,7 @@ mod exec;
 mod location;
 mod operator;
 mod repos;
+mod transfer;
 
 use config::Config;
 use exec::Exec;
