@@ -44,6 +44,7 @@ operator!(
     list,
     locate,
     new,
+    pull,
     remove,
     rename
 );

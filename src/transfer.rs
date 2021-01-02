@@ -1,7 +1,13 @@
 use crate::config;
-use git2::{Cred, CredentialType, Error, Progress};
+use git2::build::CheckoutBuilder;
+use git2::{
+    AutotagOption, Cred, CredentialType, Error, FetchOptions, Progress, RemoteCallbacks, Repository,
+};
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::io::{stdout, Write};
+use std::path::Path;
+use std::sync::{Arc, Mutex};
 
 pub struct Cache {
     ssh_password: String,
@@ -53,7 +59,7 @@ impl Cache {
     }
 }
 
-pub fn log_progress(id: &str, stat: &Progress) -> bool {
+pub fn log_progress(id: impl Display, stat: &Progress) -> bool {
     let total = stat.total_objects();
     let recieved = stat.received_objects();
     let indexed = stat.indexed_objects();
@@ -65,4 +71,54 @@ pub fn log_progress(id: &str, stat: &Progress) -> bool {
     );
     stdout().flush().ok();
     true
+}
+
+pub fn log(status: impl Display, id: impl Display) {
+    println!("{:>9} {}", status, id)
+}
+
+pub fn pull(path: &Path, id: &str, cache: &Arc<Mutex<Cache>>) -> Result<(), Error> {
+    let repo = Repository::open(path)?;
+    let mut callbacks = RemoteCallbacks::new();
+    {
+        let id = id.clone();
+        let cache = cache.clone();
+        callbacks.credentials(move |_, username, allowed_types| {
+            cache
+                .lock()
+                .unwrap()
+                .credentials(&id, username, allowed_types)
+        });
+    }
+    {
+        let id = id.clone();
+        callbacks.transfer_progress(move |stat| log_progress(&id, &stat));
+    }
+
+    let mut options = FetchOptions::new();
+    options.remote_callbacks(callbacks);
+    options.download_tags(AutotagOption::All);
+
+    let mut remote = repo.find_remote("origin")?;
+    let mut head = repo.head()?;
+
+    if !head.is_branch() {
+        return Err(Error::from_str("head is not branch"));
+    }
+
+    let branch = String::from_utf8_lossy(head.shorthand_bytes()).to_string();
+
+    remote.fetch(&[&branch], Some(&mut options), None)?;
+
+    let fetch_commit = repo.reference_to_annotated_commit(&repo.find_reference("FETCH_HEAD")?)?;
+
+    let analysis = repo.merge_analysis(&[&fetch_commit])?;
+    if analysis.0.is_fast_forward() {
+        head.set_target(fetch_commit.id(), "pull: Fast-forward")?;
+        repo.checkout_head(Some(CheckoutBuilder::default().force()))?;
+    } else if analysis.0.is_normal() {
+        return Err(Error::from_str("merge unimplemented"));
+    }
+
+    Ok(())
 }

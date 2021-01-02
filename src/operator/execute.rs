@@ -19,7 +19,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::iterate_matching_exists(&config.src, vec![self.target.clone()], self.regex) {
+        match repos::iterate_matching_exists(&config.src, vec![self.target], self.regex) {
             Ok(iter) => {
                 for path in iter {
                     match set_current_dir(&path) {
