@@ -1,8 +1,6 @@
 use crate::config;
-use git2::build::CheckoutBuilder;
-use git2::{
-    AutotagOption, Cred, CredentialType, Error, FetchOptions, Progress, RemoteCallbacks, Repository,
-};
+use git2::build::{CheckoutBuilder, RepoBuilder};
+use git2::{Cred, CredentialType, Error, FetchOptions, Progress, RemoteCallbacks, Repository};
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::{stdout, Write};
@@ -22,7 +20,7 @@ pub fn cache() -> Cache {
 }
 
 impl Cache {
-    pub fn credentials(
+    fn credentials(
         &mut self,
         id: &str,
         username: Option<&str>,
@@ -59,7 +57,7 @@ impl Cache {
     }
 }
 
-pub fn log_progress(id: impl Display, stat: &Progress) -> bool {
+fn log_progress(id: impl Display, stat: &Progress) -> bool {
     let total = stat.total_objects();
     let recieved = stat.received_objects();
     let indexed = stat.indexed_objects();
@@ -73,12 +71,7 @@ pub fn log_progress(id: impl Display, stat: &Progress) -> bool {
     true
 }
 
-pub fn log(status: impl Display, id: impl Display) {
-    println!("{:>9} {}", status, id)
-}
-
-pub fn pull(path: &Path, id: &str, cache: &Arc<Mutex<Cache>>) -> Result<(), Error> {
-    let repo = Repository::open(path)?;
+fn fetch_options<'cb>(id: &'cb str, cache: &Arc<Mutex<Cache>>) -> FetchOptions<'cb> {
     let mut callbacks = RemoteCallbacks::new();
     {
         let id = id.clone();
@@ -97,7 +90,27 @@ pub fn pull(path: &Path, id: &str, cache: &Arc<Mutex<Cache>>) -> Result<(), Erro
 
     let mut options = FetchOptions::new();
     options.remote_callbacks(callbacks);
-    options.download_tags(AutotagOption::All);
+
+    options
+}
+
+pub fn log(status: impl Display, id: impl Display) {
+    println!("{:>9} {}", status, id)
+}
+
+pub fn clone(
+    path: &Path,
+    id: &str,
+    url: &str,
+    cache: &Arc<Mutex<Cache>>,
+) -> Result<Repository, Error> {
+    RepoBuilder::new()
+        .fetch_options(fetch_options(id, cache))
+        .clone(url, &path)
+}
+
+pub fn pull(path: &Path, id: &str, cache: &Arc<Mutex<Cache>>) -> Result<(), Error> {
+    let repo = Repository::open(path)?;
 
     let mut remote = repo.find_remote("origin")?;
     let mut head = repo.head()?;
@@ -108,7 +121,7 @@ pub fn pull(path: &Path, id: &str, cache: &Arc<Mutex<Cache>>) -> Result<(), Erro
 
     let branch = String::from_utf8_lossy(head.shorthand_bytes()).to_string();
 
-    remote.fetch(&[&branch], Some(&mut options), None)?;
+    remote.fetch(&[&branch], Some(&mut fetch_options(id, cache)), None)?;
 
     let fetch_commit = repo.reference_to_annotated_commit(&repo.find_reference("FETCH_HEAD")?)?;
 

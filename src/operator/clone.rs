@@ -1,6 +1,4 @@
 use crate::{repos, transfer, Config, Exec, Location, StructOpt};
-use git2::build::RepoBuilder;
-use git2::{FetchOptions, RemoteCallbacks};
 use std::sync::{Arc, Mutex};
 
 #[derive(StructOpt, Debug)]
@@ -22,31 +20,8 @@ impl Exec for Opt {
             if path.exists() {
                 info!("entity '{}' already exists", &id)
             } else {
-                let mut callbacks = RemoteCallbacks::new();
-                {
-                    let id = id.clone();
-                    let cache = cache.clone();
-                    callbacks.credentials(move |_, username, allowed_types| {
-                        cache
-                            .lock()
-                            .unwrap()
-                            .credentials(&id, username, allowed_types)
-                    });
-                }
-                {
-                    let id = id.clone();
-                    callbacks.transfer_progress(move |stat| transfer::log_progress(&id, &stat));
-                }
-
-                let mut options = FetchOptions::new();
-                options.remote_callbacks(callbacks);
-
-                let res = RepoBuilder::new()
-                    .fetch_options(options)
-                    .clone(&location.url(), &path);
-
+                let res = transfer::clone(&path, &id, &location.url(), &cache);
                 print!("\u{1b}[K");
-
                 match res {
                     Ok(_) => transfer::log("done", id),
                     Err(err) => {
