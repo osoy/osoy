@@ -1,4 +1,4 @@
-use crate::{transfer, Config, Exec, Location, StructOpt};
+use crate::{repos, transfer, Config, Exec, Location, StructOpt};
 use git2::build::RepoBuilder;
 use git2::{FetchOptions, RemoteCallbacks};
 use std::sync::{Arc, Mutex};
@@ -54,6 +54,7 @@ impl Exec for Opt {
                         if self.verbose {
                             transfer::log("", err);
                         }
+                        repos::remove(&path).ok();
                     }
                 }
             }

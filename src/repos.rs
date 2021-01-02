@@ -91,11 +91,12 @@ fn remove_dir_rec(dir: &Path) -> usize {
 
 /// Remove directory and parent directories if empty returning count of removed parent directories.
 pub fn remove(dir: &Path) -> io::Result<usize> {
-    fs::remove_dir_all(dir).map(|_| {
-        dir.parent()
-            .map(|parent| remove_dir_rec(parent))
-            .unwrap_or(0)
-    })
+    let res = fs::remove_dir_all(dir);
+    let count = dir
+        .parent()
+        .map(|parent| remove_dir_rec(parent))
+        .unwrap_or(0);
+    res.map(|_| count)
 }
 
 /// Rename directory and remove previous parent directories if empty.
