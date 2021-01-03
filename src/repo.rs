@@ -31,14 +31,14 @@ pub fn iterate_matching(
     dir: &Path,
     targets: Vec<Location>,
     regex: bool,
-) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
-    Ok(Box::new(iterate(dir)?.filter(move |path| {
+) -> io::Result<impl Iterator<Item = PathBuf>> {
+    Ok(iterate(dir)?.filter(move |path| {
         targets.len() == 0
             || targets.iter().any(|location| match regex {
                 true => location.matches_re(&path),
                 false => location.matches(&path),
             })
-    })))
+    }))
 }
 
 /// Same as `iterate_matching` except returns an error if no matching repositories found.
@@ -46,10 +46,10 @@ pub fn iterate_matching_exists(
     dir: &Path,
     targets: Vec<Location>,
     regex: bool,
-) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
+) -> io::Result<impl Iterator<Item = PathBuf>> {
     let mut repos = iterate_matching(dir, targets, regex)?;
     match repos.next() {
-        Some(first) => Ok(Box::new(iter::once(first).chain(repos))),
+        Some(first) => Ok(iter::once(first).chain(repos)),
         None => Err(io::Error::new(
             io::ErrorKind::Other,
             "no matching entities found",

@@ -40,11 +40,10 @@ fn is_executable(path: &Path) -> bool {
     }
 }
 
-pub fn executables(dir: &Path) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
-    Ok(Box::new(
-        dir.read_dir()?
-            .filter_map(Result::ok)
-            .map(|entry| entry.path())
-            .filter(|path| is_executable(path)),
-    ))
+pub fn executables(dir: &Path) -> io::Result<impl Iterator<Item = PathBuf>> {
+    Ok(dir
+        .read_dir()?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| is_executable(path)))
 }
