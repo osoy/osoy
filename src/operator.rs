@@ -47,5 +47,6 @@ operator!(
     new,
     pull,
     remove,
-    rename
+    rename,
+    unlink
 );

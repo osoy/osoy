@@ -1,6 +1,18 @@
 use std::io;
 use std::path::{Path, PathBuf};
 
+pub fn iterate(
+    bin: &Path,
+    repos: Vec<PathBuf>,
+) -> io::Result<impl Iterator<Item = (PathBuf, PathBuf)>> {
+    Ok(bin
+        .read_dir()?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter_map(|link| link.read_link().map(|dest| (link, dest)).ok())
+        .filter(move |(_, dest)| repos.iter().any(|repo| dest.starts_with(repo))))
+}
+
 pub fn create(bin: &Path, exe: &Path) -> io::Result<PathBuf> {
     let link_path = bin.join(exe.file_name().ok_or(io::Error::new(
         io::ErrorKind::NotFound,
