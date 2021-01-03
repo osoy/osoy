@@ -41,7 +41,7 @@ pub fn iterate_matching(
     })))
 }
 
-/// Same as `iterate_matching` except returns error if no matching repositories found.
+/// Same as `iterate_matching` except returns an error if no matching repositories found.
 pub fn iterate_matching_exists(
     dir: &Path,
     targets: Vec<Location>,
@@ -57,7 +57,7 @@ pub fn iterate_matching_exists(
     }
 }
 
-/// Get an unique repository in directory otherwise return error.
+/// Get an unique repository in directory otherwise return an error.
 pub fn unique(dir: &Path, target: Location, regex: bool) -> io::Result<PathBuf> {
     let mut repos = iterate_matching(dir, vec![target.clone()], regex)?;
     let repo = repos.next();
