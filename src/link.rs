@@ -9,46 +9,63 @@ pub fn iterate(
         .read_dir()?
         .filter_map(Result::ok)
         .map(|entry| entry.path())
-        .filter_map(|link| link.read_link().map(|dest| (link, dest)).ok())
+        .filter_map(|sym| sym.read_link().map(|dest| (sym, dest)).ok())
         .filter(move |(_, dest)| repos.iter().any(|repo| dest.starts_with(repo))))
 }
 
+pub fn link_path(bin: &Path, exe: &Path) -> io::Result<PathBuf> {
+    exe.file_name()
+        .map(|osname| bin.join(osname))
+        .ok_or(io::Error::new(
+            io::ErrorKind::NotFound,
+            "no file name found",
+        ))
+}
+
 pub fn create(bin: &Path, exe: &Path) -> io::Result<PathBuf> {
-    let link_path = bin.join(exe.file_name().ok_or(io::Error::new(
-        io::ErrorKind::NotFound,
-        "no file name found",
-    ))?);
+    let sym = link_path(bin, exe)?;
     {
         #[cfg(target_family = "unix")]
         {
             use std::os::unix::fs::symlink;
-            symlink(exe, &link_path)
+            symlink(exe, &sym)
         }
         #[cfg(target_family = "windows")]
         {
             use std::os::windows::fs::symlink_file;
-            symlink_file(exe, &link_path)
+            symlink_file(exe, &sym)
         }
     }
-    .map(|_| link_path)
+    .map(|_| sym)
+}
+
+fn deref_rec(path: &Path) -> PathBuf {
+    match path.read_link() {
+        Ok(dest) => deref_rec(&match dest.is_relative() {
+            false => dest,
+            true => path.parent().unwrap().join(dest),
+        }),
+        Err(_) => path.into(),
+    }
 }
 
 fn is_executable(path: &Path) -> bool {
-    #[cfg(target_family = "unix")]
-    {
-        use std::os::unix::fs::MetadataExt;
-        !path.read_link().unwrap_or(path.into()).is_dir()
-            && path
-                .metadata()
+    let path = deref_rec(path);
+    path.is_file() && {
+        #[cfg(target_family = "unix")]
+        {
+            use std::os::unix::fs::MetadataExt;
+            path.metadata()
                 .map(|meta| meta.mode() & 0o100 > 0)
                 .unwrap_or(false)
-    }
-    #[cfg(target_family = "windows")]
-    {
-        path.extension()
-            .map(|ostyp| ostyp.to_str().map(|typ| typ == "exe" || typ == "bat"))
-            .flatten()
-            .unwrap_or(false)
+        }
+        #[cfg(target_family = "windows")]
+        {
+            path.extension()
+                .map(|ostyp| ostyp.to_str().map(|typ| typ == "exe" || typ == "bat"))
+                .flatten()
+                .unwrap_or(false)
+        }
     }
 }
 
