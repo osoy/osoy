@@ -41,6 +41,7 @@ operator!(
     clone,
     completions,
     execute,
+    link,
     list,
     locate,
     new,

@@ -3,6 +3,7 @@ mod cli;
 
 mod config;
 mod exec;
+mod link;
 mod location;
 mod operator;
 mod repos;

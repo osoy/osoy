@@ -2,10 +2,8 @@ use crate::Location;
 use std::path::{Path, PathBuf};
 use std::{fs, io, iter};
 
-type GenericIter = Box<dyn Iterator<Item = PathBuf>>;
-
 /// Get recursive iterator over git repositories in given directory.
-pub fn iterate(dir: &Path) -> io::Result<GenericIter> {
+pub fn iterate(dir: &Path) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
     match dir.join(".git").exists() {
         true => Ok(Box::new(iter::once(dir.into()))),
         false => match dir.read_dir() {
@@ -33,7 +31,7 @@ pub fn iterate_matching(
     dir: &Path,
     targets: Vec<Location>,
     regex: bool,
-) -> io::Result<GenericIter> {
+) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
     Ok(Box::new(iterate(dir)?.filter(move |path| {
         targets.len() == 0
             || targets.iter().any(|location| match regex {
@@ -48,7 +46,7 @@ pub fn iterate_matching_exists(
     dir: &Path,
     targets: Vec<Location>,
     regex: bool,
-) -> io::Result<GenericIter> {
+) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
     let mut repos = iterate_matching(dir, targets, regex)?;
     match repos.next() {
         Some(first) => Ok(Box::new(iter::once(first).chain(repos))),
