@@ -1,4 +1,4 @@
-use crate::{repos, Config, Exec, Location, StructOpt};
+use crate::{repo, Config, Exec, Location, StructOpt};
 use git2::Repository;
 
 #[derive(StructOpt, Debug)]
@@ -16,10 +16,10 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::unique(&config.src, self.target, self.regex) {
+        match repo::unique(&config.src, self.target, self.regex) {
             Ok(path) => {
                 let dest_path = config.src.join(self.destination.id());
-                match repos::rename(&path, &dest_path) {
+                match repo::rename(&path, &dest_path) {
                     Ok(_) => {
                         if let Err(err) = match Repository::open(&dest_path) {
                             Ok(repo) => repo.remote_set_url("origin", &self.destination.url()),

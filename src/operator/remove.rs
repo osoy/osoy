@@ -1,4 +1,4 @@
-use crate::{repos, Config, Exec, Location, StructOpt};
+use crate::{repo, Config, Exec, Location, StructOpt};
 
 #[derive(StructOpt, Debug)]
 #[structopt(alias = "rm", about = "Remove repositories")]
@@ -15,12 +15,12 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::iterate_matching_exists(&config.src, self.targets, self.regex) {
+        match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
                 for path in iter {
                     let path_display = path.strip_prefix(&config.src).unwrap().display();
                     if self.force || ask_bool!("remove '{}'?", path_display) {
-                        match repos::remove(&path) {
+                        match repo::remove(&path) {
                             Ok(_) => {
                                 if self.verbose {
                                     info!("removed '{}'", path_display);

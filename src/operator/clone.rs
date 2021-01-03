@@ -1,4 +1,4 @@
-use crate::{repos, transfer, Config, Exec, Location, StructOpt};
+use crate::{repo, transfer, Config, Exec, Location, StructOpt};
 use std::sync::{Arc, Mutex};
 
 #[derive(StructOpt, Debug)]
@@ -29,7 +29,7 @@ impl Exec for Opt {
                         if self.verbose {
                             transfer::log("", err);
                         }
-                        repos::remove(&path).ok();
+                        repo::remove(&path).ok();
                     }
                 }
             }

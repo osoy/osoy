@@ -1,4 +1,4 @@
-use crate::{repos, transfer, Config, Exec, Location, StructOpt};
+use crate::{repo, transfer, Config, Exec, Location, StructOpt};
 use std::sync::{Arc, Mutex};
 
 #[derive(StructOpt, Debug)]
@@ -14,7 +14,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::iterate_matching_exists(&config.src, self.targets, self.regex) {
+        match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
                 let cache = Arc::new(Mutex::new(transfer::cache()));
 

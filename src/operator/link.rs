@@ -1,4 +1,4 @@
-use crate::{link, repos, Config, Exec, Location, StructOpt};
+use crate::{link, repo, Config, Exec, Location, StructOpt};
 
 #[derive(StructOpt, Debug)]
 #[structopt(alias = "ln", about = "Create symbolic links for executables")]
@@ -15,7 +15,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        match repos::iterate_matching_exists(&config.src, self.targets, self.regex) {
+        match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
                 for path in iter {
                     if let Ok(exe_iter) = link::executables(&path) {
