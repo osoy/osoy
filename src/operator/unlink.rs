@@ -1,6 +1,5 @@
 use crate::{link, repo, Config, Exec, Location, StructOpt};
 use std::fs;
-use std::path::PathBuf;
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Remove symbolic links")]
@@ -19,7 +18,7 @@ impl Exec for Opt {
     fn exec(self, config: Config) {
         match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
-                if let Ok(iter) = link::iterate(&config.bin, iter.collect::<Vec<PathBuf>>()) {
+                if let Ok(iter) = link::iterate(&config.bin, iter.collect()) {
                     for (sym, dest) in iter {
                         if self.force
                             || ask_bool!(

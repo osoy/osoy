@@ -1,5 +1,4 @@
 use crate::{link, repo, Config, Exec, Location, StructOpt};
-use std::path::PathBuf;
 
 #[derive(StructOpt, Debug)]
 #[structopt(alias = "ls", about = "List repositories")]
@@ -16,19 +15,18 @@ impl Exec for Opt {
     fn exec(self, config: Config) {
         match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
-                let repos = iter.collect::<Vec<PathBuf>>();
                 let exe_flag = self.executables;
 
                 let symlinks = match exe_flag {
                     0 => None,
                     _ => Some(
-                        link::iterate(&config.bin, repos.clone())
-                            .map(|iter| iter.collect::<Vec<(PathBuf, PathBuf)>>())
+                        link::entries(&config.bin)
+                            .map(|iter| iter.collect())
                             .unwrap_or(vec![]),
                     ),
                 };
 
-                for path in repos {
+                for path in iter {
                     let exes = match exe_flag {
                         0 => None,
                         _ => link::executables(&path).ok().map(|iter| {

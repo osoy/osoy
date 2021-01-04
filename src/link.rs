@@ -1,6 +1,14 @@
 use std::io;
 use std::path::{Path, PathBuf};
 
+pub fn entries(bin: &Path) -> io::Result<impl Iterator<Item = (PathBuf, PathBuf)>> {
+    Ok(bin
+        .read_dir()?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter_map(|sym| sym.read_link().map(|dest| (sym, dest)).ok()))
+}
+
 pub fn iterate(
     bin: &Path,
     repos: Vec<PathBuf>,
