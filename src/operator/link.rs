@@ -21,7 +21,7 @@ impl Exec for Opt {
                     if let Ok(exe_iter) = link::executables(&path) {
                         for exe in exe_iter.filter(|exe| {
                             link::link_path(&config.bin, exe)
-                                .map(|sym| !sym.exists())
+                                .map(|sym| &link::deref_rec(&sym) != exe)
                                 .unwrap_or(false)
                         }) {
                             let exe_display = exe.strip_prefix(&config.src).unwrap().display();

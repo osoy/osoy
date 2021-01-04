@@ -39,7 +39,7 @@ pub fn create(bin: &Path, exe: &Path) -> io::Result<PathBuf> {
     .map(|_| sym)
 }
 
-fn deref_rec(path: &Path) -> PathBuf {
+pub fn deref_rec(path: &Path) -> PathBuf {
     match path.read_link() {
         Ok(dest) => deref_rec(&match dest.is_relative() {
             false => dest,
