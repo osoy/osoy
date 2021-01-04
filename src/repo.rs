@@ -1,4 +1,4 @@
-use crate::Location;
+use crate::{link, Location};
 use std::path::{Path, PathBuf};
 use std::{fs, io, iter};
 
@@ -87,14 +87,25 @@ fn remove_dir_rec(dir: &Path) -> usize {
     }
 }
 
-/// Remove directory and parent directories if empty returning count of removed parent directories.
-pub fn remove(dir: &Path) -> io::Result<usize> {
+/// Remove directory returning a tuple of counts of removed symbolic links and parent directories.
+pub fn remove(bin: &Path, dir: &Path) -> io::Result<(usize, usize)> {
     let res = fs::remove_dir_all(dir);
-    let count = dir
+    let removed_parents = dir
         .parent()
         .map(|parent| remove_dir_rec(parent))
         .unwrap_or(0);
-    res.map(|_| count)
+    res.map(|_| {
+        (
+            link::iterate(bin, vec![dir.into()])
+                .map(|iter| {
+                    iter.fold(0, |acc, (sym, _)| {
+                        acc + fs::remove_file(sym).map(|_| 1).unwrap_or(0)
+                    })
+                })
+                .unwrap_or(0),
+            removed_parents,
+        )
+    })
 }
 
 /// Rename directory and remove previous parent directories if empty.

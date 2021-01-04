@@ -29,7 +29,7 @@ impl Exec for Opt {
                         if self.verbose {
                             transfer::log("", err);
                         }
-                        repo::remove(&path).ok();
+                        repo::remove(&config.bin, &path).ok();
                     }
                 }
             }

@@ -20,7 +20,7 @@ impl Exec for Opt {
                 for path in iter {
                     let path_display = path.strip_prefix(&config.src).unwrap().display();
                     if self.force || ask_bool!("remove '{}'?", path_display) {
-                        match repo::remove(&path) {
+                        match repo::remove(&config.bin, &path) {
                             Ok(_) => {
                                 if self.verbose {
                                     info!("removed '{}'", path_display);
