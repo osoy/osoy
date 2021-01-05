@@ -95,7 +95,7 @@ impl Exec for Opt {
                         }),
                     };
 
-                    let (lines_git, branch) = match self.git {
+                    let (lines_git, (graph, branch)) = match self.git {
                         false => None,
                         true => Repository::open(&path).ok().map(|repo| {
                             (
@@ -126,25 +126,64 @@ impl Exec for Opt {
                                             format!("{}\n  {}", acc, line)
                                         })
                                 }),
-                                repo.head().ok().map(|head| {
-                                    String::from_utf8_lossy(head.shorthand_bytes()).to_string()
-                                }),
+                                repo.head()
+                                    .ok()
+                                    .map(|head| {
+                                        let branch =
+                                            String::from_utf8_lossy(head.shorthand_bytes())
+                                                .to_string();
+                                        (
+                                            repo.find_reference(&format!(
+                                                "refs/remotes/origin/{}",
+                                                &branch
+                                            ))
+                                            .ok()
+                                            .map(|remote_ref| {
+                                                repo.reference_to_annotated_commit(&remote_ref)
+                                                    .ok()
+                                                    .map(|remote_commit| {
+                                                        repo.graph_ahead_behind(
+                                                            head.target().unwrap(),
+                                                            remote_commit.id(),
+                                                        )
+                                                        .ok()
+                                                    })
+                                                    .flatten()
+                                            })
+                                            .flatten(),
+                                            Some(branch),
+                                        )
+                                    })
+                                    .unwrap_or((None, None)),
                             )
                         }),
                     }
-                    .unwrap_or((None, None));
+                    .unwrap_or((None, (None, None)));
 
                     if !self.only_details
                         || lines_exe.as_ref().map(|l| !l.is_empty()).unwrap_or(false)
                         || lines_git.as_ref().map(|l| !l.is_empty()).unwrap_or(false)
-                        || branch.as_ref().map(|b| b != "master").unwrap_or(false)
+                        || branch.as_ref().map(|b| b != "master").unwrap_or(true)
+                        || graph
+                            .as_ref()
+                            .map(|(ahead, behind)| *ahead > 0 || *behind > 0)
+                            .unwrap_or(false)
                     {
                         println!(
-                            "{}{}{}{}",
-                            path.strip_prefix(&config.src).unwrap().display(),
-                            branch.map(|b| format!(":{}", b)).unwrap_or("".into()),
-                            lines_exe.unwrap_or("".into()),
-                            lines_git.unwrap_or("".into())
+                            "{}",
+                            [
+                                path.strip_prefix(&config.src)
+                                    .unwrap()
+                                    .display()
+                                    .to_string(),
+                                branch.map(|b| format!(":{}", b)).unwrap_or("".into()),
+                                graph
+                                    .map(|g| format!(" [{}:{}]", g.0, g.1))
+                                    .unwrap_or("".into()),
+                                lines_exe.unwrap_or("".into()),
+                                lines_git.unwrap_or("".into()),
+                            ]
+                            .join("")
                         );
                     }
                 }
