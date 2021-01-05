@@ -25,6 +25,7 @@ impl Exec for Opt {
                     match set_current_dir(&path) {
                         Ok(_) => match process::Command::new(&self.command)
                             .args(&self.arguments)
+                            .env("PWD", path.display().to_string())
                             .status()
                         {
                             Ok(status) => {
