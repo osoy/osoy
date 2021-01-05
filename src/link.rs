@@ -1,5 +1,5 @@
-use std::io;
 use std::path::{Path, PathBuf};
+use std::{fs, io};
 
 pub fn entries(bin: &Path) -> io::Result<impl Iterator<Item = (PathBuf, PathBuf)>> {
     Ok(bin
@@ -31,6 +31,7 @@ pub fn link_path(bin: &Path, exe: &Path) -> io::Result<PathBuf> {
 }
 
 pub fn create(bin: &Path, exe: &Path) -> io::Result<PathBuf> {
+    fs::create_dir_all(bin).ok();
     let sym = link_path(bin, exe)?;
     {
         #[cfg(target_family = "unix")]

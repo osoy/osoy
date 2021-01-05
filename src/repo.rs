@@ -103,7 +103,7 @@ pub fn remove(bin: &Path, dir: &Path) -> io::Result<(usize, usize)> {
                     })
                 })
                 .unwrap_or(0),
-            removed_parents,
+            removed_parents + remove_dir_rec(bin),
         )
     })
 }
