@@ -11,7 +11,9 @@ pub struct Opt {
 }
 
 impl Exec for Opt {
-    fn exec(self, config: Config) {
+    fn exec(self, config: Config) -> i32 {
+        let mut errors = 0;
+
         for location in self.targets {
             let path = config.src.join(location.id());
             if path.exists() {
@@ -23,12 +25,18 @@ impl Exec for Opt {
                             info!("new repository created '{}'", location.id());
                         }
                         if let Err(err) = repo.remote("origin", &location.url()) {
+                            errors += 1;
                             info!("could not set remote: {}", err);
                         }
                     }
-                    Err(err) => info!("could not init: {}", err),
+                    Err(err) => {
+                        errors += 1;
+                        info!("could not init: {}", err)
+                    }
                 }
             }
         }
+
+        errors
     }
 }

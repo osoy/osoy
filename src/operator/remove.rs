@@ -14,7 +14,9 @@ pub struct Opt {
 }
 
 impl Exec for Opt {
-    fn exec(self, config: Config) {
+    fn exec(self, config: Config) -> i32 {
+        let mut errors = 0;
+
         match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
                 for path in iter {
@@ -26,12 +28,20 @@ impl Exec for Opt {
                                     info!("removed '{}'", path_display);
                                 }
                             }
-                            Err(err) => info!("could not remove '{}': {}", path.display(), err),
+                            Err(err) => {
+                                errors += 1;
+                                info!("could not remove '{}': {}", path.display(), err)
+                            }
                         }
                     }
                 }
             }
-            Err(err) => info!("{}", err),
+            Err(err) => {
+                errors += 1;
+                info!("{}", err)
+            }
         }
+
+        errors
     }
 }

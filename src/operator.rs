@@ -26,7 +26,7 @@ macro_rules! operator {
         }
 
         impl Exec for Operator {
-            fn exec(self, config: Config) {
+            fn exec(self, config: Config) -> i32 {
                 match self {
                     $(
                         Operator::$oper { opt } => opt.exec(config),

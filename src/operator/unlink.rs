@@ -15,7 +15,9 @@ pub struct Opt {
 }
 
 impl Exec for Opt {
-    fn exec(self, config: Config) {
+    fn exec(self, config: Config) -> i32 {
+        let mut errors = 0;
+
         match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
                 if let Ok(iter) = link::iterate(&config.bin, iter.collect()) {
@@ -36,6 +38,7 @@ impl Exec for Opt {
                                     }
                                 }
                                 Err(err) => {
+                                    errors += 1;
                                     info!("could not remove '{}': {}", sym.display(), err)
                                 }
                             }
@@ -43,7 +46,12 @@ impl Exec for Opt {
                     }
                 }
             }
-            Err(err) => info!("{}", err),
+            Err(err) => {
+                errors += 1;
+                info!("{}", err)
+            }
         }
+
+        errors
     }
 }

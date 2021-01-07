@@ -18,5 +18,5 @@ use structopt::StructOpt;
 fn main() {
     let operator = Operator::from_args();
     let config = Config::from_env();
-    operator.exec(config);
+    std::process::exit(operator.exec(config))
 }

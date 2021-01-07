@@ -10,11 +10,12 @@ pub struct Opt {
 }
 
 impl Exec for Opt {
-    fn exec(self, _: Config) {
+    fn exec(self, _: Config) -> i32 {
         Operator::clap().gen_completions_to(
             env!("CARGO_PKG_NAME"),
             self.shell,
             &mut std::io::stdout(),
         );
+        0
     }
 }

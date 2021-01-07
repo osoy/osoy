@@ -12,7 +12,9 @@ pub struct Opt {
 }
 
 impl Exec for Opt {
-    fn exec(self, config: Config) {
+    fn exec(self, config: Config) -> i32 {
+        let mut errors = 0;
+
         match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
                 let cache = gitutil::AuthCache::new();
@@ -27,6 +29,7 @@ impl Exec for Opt {
                     match gitutil::pull(&path, &id, &cache) {
                         Ok(_) => gitutil::log("done", id),
                         Err(err) => {
+                            errors += 1;
                             gitutil::log("failed", id);
                             if self.verbose && !format!("{}", err).is_empty() {
                                 gitutil::log("", err);
@@ -35,7 +38,12 @@ impl Exec for Opt {
                     }
                 }
             }
-            Err(err) => info!("{}", err),
+            Err(err) => {
+                errors += 1;
+                info!("{}", err)
+            }
         }
+
+        errors
     }
 }

@@ -15,7 +15,9 @@ pub struct Opt {
 }
 
 impl Exec for Opt {
-    fn exec(self, config: Config) {
+    fn exec(self, config: Config) -> i32 {
+        let mut errors = 0;
+
         match repo::unique(&config.src, self.target, self.regex) {
             Ok(path) => {
                 let dest_path = config.src.join(self.destination.id());
@@ -25,6 +27,7 @@ impl Exec for Opt {
                             Ok(repo) => repo.remote_set_url("origin", &self.destination.url()),
                             Err(err) => Err(err),
                         } {
+                            errors += 1;
                             info!("could not set remote: {}", err);
                         }
 
@@ -36,10 +39,18 @@ impl Exec for Opt {
                             );
                         }
                     }
-                    Err(err) => info!("rename failed: {}", err),
+                    Err(err) => {
+                        errors += 1;
+                        info!("rename failed: {}", err)
+                    }
                 }
             }
-            Err(err) => info!("{}", err),
+            Err(err) => {
+                errors += 1;
+                info!("{}", err)
+            }
         }
+
+        errors
     }
 }

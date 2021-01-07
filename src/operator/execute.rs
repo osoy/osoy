@@ -18,7 +18,9 @@ pub struct Opt {
 }
 
 impl Exec for Opt {
-    fn exec(self, config: Config) {
+    fn exec(self, config: Config) -> i32 {
+        let mut errors = 0;
+
         match repo::iterate_matching_exists(&config.src, vec![self.target], self.regex) {
             Ok(iter) => {
                 for path in iter {
@@ -43,17 +45,34 @@ impl Exec for Opt {
                                     .code()
                                     .map(|c| match c {
                                         0 => "OK".into(),
-                                        _ => format!("E{}", c),
+                                        _ => {
+                                            errors += 1;
+                                            format!("E{}", c)
+                                        }
                                     })
-                                    .unwrap_or("NONE".into())
+                                    .unwrap_or_else(|| {
+                                        errors += 1;
+                                        "NONE".into()
+                                    })
                             ),
-                            Err(err) => info!("failed to execute '{}': {}", self.command, err),
+                            Err(err) => {
+                                errors += 1;
+                                info!("failed to execute '{}': {}", self.command, err)
+                            }
                         },
-                        Err(err) => info!("could not access '{}': {}", path.display(), err),
+                        Err(err) => {
+                            errors += 1;
+                            info!("could not access '{}': {}", path.display(), err)
+                        }
                     }
                 }
             }
-            Err(err) => info!("{}", err),
+            Err(err) => {
+                errors += 1;
+                info!("{}", err)
+            }
         }
+
+        errors
     }
 }

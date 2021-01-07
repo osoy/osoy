@@ -10,10 +10,16 @@ pub struct Opt {
 }
 
 impl Exec for Opt {
-    fn exec(self, config: Config) {
+    fn exec(self, config: Config) -> i32 {
         match repo::unique(&config.src, self.target, self.regex) {
-            Ok(path) => println!("{}", path.display()),
-            Err(err) => info!("{}", err),
+            Ok(path) => {
+                println!("{}", path.display());
+                0
+            }
+            Err(err) => {
+                info!("{}", err);
+                1
+            }
         }
     }
 }

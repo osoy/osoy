@@ -10,8 +10,9 @@ pub struct Opt {
 }
 
 impl Exec for Opt {
-    fn exec(self, config: Config) {
+    fn exec(self, config: Config) -> i32 {
         let cache = gitutil::AuthCache::new();
+        let mut errors = 0;
 
         for location in self.targets {
             let id = location.id();
@@ -24,6 +25,7 @@ impl Exec for Opt {
                 match res {
                     Ok(_) => gitutil::log("done", id),
                     Err(err) => {
+                        errors += 1;
                         gitutil::log("failed", id);
                         if self.verbose {
                             gitutil::log("", err);
@@ -33,5 +35,7 @@ impl Exec for Opt {
                 }
             }
         }
+
+        errors
     }
 }
