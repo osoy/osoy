@@ -3,11 +3,11 @@ mod cli;
 
 mod config;
 mod exec;
+mod gitutil;
 mod link;
 mod location;
 mod operator;
 mod repo;
-mod transfer;
 
 use config::Config;
 use exec::Exec;

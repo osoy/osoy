@@ -1,5 +1,5 @@
-use crate::{link, repo, Config, Exec, Location, StructOpt};
-use git2::{Repository, Status};
+use crate::{gitutil, link, repo, Config, Exec, Location, StructOpt};
+use git2::Repository;
 use structopt::clap::ArgGroup;
 
 #[derive(StructOpt, Debug)]
@@ -22,28 +22,6 @@ pub struct Opt {
     only_details: bool,
     #[structopt(help = Location::about())]
     targets: Vec<Location>,
-}
-
-fn status_wt_char(st: &Status) -> Option<&'static char> {
-    match st {
-        s if s.contains(Status::WT_NEW) => Some(&'N'),
-        s if s.contains(Status::WT_MODIFIED) => Some(&'M'),
-        s if s.contains(Status::WT_DELETED) => Some(&'D'),
-        s if s.contains(Status::WT_RENAMED) => Some(&'R'),
-        s if s.contains(Status::WT_TYPECHANGE) => Some(&'T'),
-        _ => None,
-    }
-}
-
-fn status_index_char(st: &Status) -> Option<&'static char> {
-    match st {
-        s if s.contains(Status::INDEX_NEW) => Some(&'N'),
-        s if s.contains(Status::INDEX_MODIFIED) => Some(&'M'),
-        s if s.contains(Status::INDEX_DELETED) => Some(&'D'),
-        s if s.contains(Status::INDEX_RENAMED) => Some(&'R'),
-        s if s.contains(Status::INDEX_TYPECHANGE) => Some(&'T'),
-        _ => None,
-    }
 }
 
 impl Exec for Opt {
@@ -95,70 +73,26 @@ impl Exec for Opt {
                         }),
                     };
 
-                    let (lines_git, (graph, branch)) = match self.git {
+                    let git_status = match self.git {
                         false => None,
-                        true => Repository::open(&path).ok().map(|repo| {
+                        true => Repository::open(&path)
+                            .ok()
+                            .map(|repo| gitutil::RepoStatus::from(&repo)),
+                    };
+
+                    let (lines_git, branch, graph) = git_status
+                        .map(|stat| {
                             (
-                                repo.statuses(None).ok().map(|statuses| {
-                                    statuses
-                                        .iter()
-                                        .map(|entry| {
-                                            let st = entry.status();
-                                            let index_ch = status_index_char(&st);
-                                            let wt_ch = status_wt_char(&st);
-                                            let fname = String::from_utf8_lossy(entry.path_bytes());
-                                            vec![
-                                                index_ch
-                                                    .map(|ch| {
-                                                        format!("{} {}", ch.to_uppercase(), fname)
-                                                    })
-                                                    .unwrap_or("".into()),
-                                                wt_ch
-                                                    .map(|ch| {
-                                                        format!("{} {}", ch.to_lowercase(), fname)
-                                                    })
-                                                    .unwrap_or("".into()),
-                                            ]
-                                        })
-                                        .flatten()
-                                        .filter(|word| !word.is_empty())
-                                        .fold(String::new(), |acc, line| {
-                                            format!("{}\n  {}", acc, line)
-                                        })
-                                }),
-                                repo.head()
-                                    .ok()
-                                    .map(|head| {
-                                        let branch =
-                                            String::from_utf8_lossy(head.shorthand_bytes())
-                                                .to_string();
-                                        (
-                                            repo.find_reference(&format!(
-                                                "refs/remotes/origin/{}",
-                                                &branch
-                                            ))
-                                            .ok()
-                                            .map(|remote_ref| {
-                                                repo.reference_to_annotated_commit(&remote_ref)
-                                                    .ok()
-                                                    .map(|remote_commit| {
-                                                        repo.graph_ahead_behind(
-                                                            head.target().unwrap(),
-                                                            remote_commit.id(),
-                                                        )
-                                                        .ok()
-                                                    })
-                                                    .flatten()
-                                            })
-                                            .flatten(),
-                                            Some(branch),
-                                        )
+                                stat.changes.map(|changes| {
+                                    changes.iter().fold(String::new(), |acc, (ch, fname)| {
+                                        format!("{}\n  {} {}", acc, ch, fname)
                                     })
-                                    .unwrap_or((None, None)),
+                                }),
+                                stat.branch,
+                                stat.graph,
                             )
-                        }),
-                    }
-                    .unwrap_or((None, (None, None)));
+                        })
+                        .unwrap_or((None, None, None));
 
                     if !self.only_details
                         || lines_exe.as_ref().map(|l| !l.is_empty()).unwrap_or(false)

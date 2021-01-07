@@ -1,5 +1,4 @@
-use crate::{repo, transfer, Config, Exec, Location, StructOpt};
-use std::sync::{Arc, Mutex};
+use crate::{gitutil, repo, Config, Exec, Location, StructOpt};
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Clone repositories")]
@@ -12,7 +11,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) {
-        let cache = Arc::new(Mutex::new(transfer::cache()));
+        let cache = gitutil::AuthCache::new();
 
         for location in self.targets {
             let id = location.id();
@@ -20,14 +19,14 @@ impl Exec for Opt {
             if path.exists() {
                 info!("entity '{}' already exists", &id)
             } else {
-                let res = transfer::clone(&path, &id, &location.url(), &cache);
+                let res = gitutil::clone(&path, &id, &location.url(), &cache);
                 print!("\u{1b}[K");
                 match res {
-                    Ok(_) => transfer::log("done", id),
+                    Ok(_) => gitutil::log("done", id),
                     Err(err) => {
-                        transfer::log("failed", id);
+                        gitutil::log("failed", id);
                         if self.verbose {
-                            transfer::log("", err);
+                            gitutil::log("", err);
                         }
                         repo::remove(&config.bin, &path).ok();
                     }

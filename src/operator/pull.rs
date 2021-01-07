@@ -1,5 +1,4 @@
-use crate::{repo, transfer, Config, Exec, Location, StructOpt};
-use std::sync::{Arc, Mutex};
+use crate::{gitutil, repo, Config, Exec, Location, StructOpt};
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Pull from repository remotes")]
@@ -16,7 +15,7 @@ impl Exec for Opt {
     fn exec(self, config: Config) {
         match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
-                let cache = Arc::new(Mutex::new(transfer::cache()));
+                let cache = gitutil::AuthCache::new();
 
                 for path in iter {
                     let id = path
@@ -25,12 +24,12 @@ impl Exec for Opt {
                         .display()
                         .to_string();
 
-                    match transfer::pull(&path, &id, &cache) {
-                        Ok(_) => transfer::log("done", id),
+                    match gitutil::pull(&path, &id, &cache) {
+                        Ok(_) => gitutil::log("done", id),
                         Err(err) => {
-                            transfer::log("failed", id);
+                            gitutil::log("failed", id);
                             if self.verbose && !format!("{}", err).is_empty() {
-                                transfer::log("", err);
+                                gitutil::log("", err);
                             }
                         }
                     }
