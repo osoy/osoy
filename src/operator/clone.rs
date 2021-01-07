@@ -11,7 +11,7 @@ pub struct Opt {
 
 impl Exec for Opt {
     fn exec(self, config: Config) -> i32 {
-        let cache = gitutil::AuthCache::new();
+        let auth_cache = gitutil::AuthCache::new();
         let mut errors = 0;
 
         for location in self.targets {
@@ -20,7 +20,7 @@ impl Exec for Opt {
             if path.exists() {
                 info!("entity '{}' already exists", &id)
             } else {
-                let res = gitutil::clone(&path, &id, &location.url(), &cache);
+                let res = gitutil::clone(&path, &id, &location.url(), &auth_cache);
                 print!("\u{1b}[K");
                 match res {
                     Ok(_) => gitutil::log("done", id),

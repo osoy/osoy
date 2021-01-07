@@ -17,7 +17,7 @@ impl Exec for Opt {
 
         match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
-                let cache = gitutil::AuthCache::new();
+                let auth_cache = gitutil::AuthCache::new();
 
                 for path in iter {
                     let id = path
@@ -26,7 +26,7 @@ impl Exec for Opt {
                         .display()
                         .to_string();
 
-                    match gitutil::pull(&path, &id, &cache) {
+                    match gitutil::pull(&path, &id, &auth_cache) {
                         Ok(_) => gitutil::log("done", id),
                         Err(err) => {
                             errors += 1;

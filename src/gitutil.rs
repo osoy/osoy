@@ -73,13 +73,13 @@ fn log_progress(id: impl Display, stat: &Progress) -> bool {
     true
 }
 
-fn fetch_options<'cb>(id: &'cb str, cache: &Arc<Mutex<AuthCache>>) -> FetchOptions<'cb> {
+fn fetch_options<'cb>(id: &'cb str, auth_cache: &Arc<Mutex<AuthCache>>) -> FetchOptions<'cb> {
     let mut callbacks = RemoteCallbacks::new();
     {
         let id = id.clone();
-        let cache = cache.clone();
+        let auth_cache = auth_cache.clone();
         callbacks.credentials(move |_, username, allowed_types| {
-            cache
+            auth_cache
                 .lock()
                 .unwrap()
                 .credentials(&id, username, allowed_types)
@@ -104,14 +104,14 @@ pub fn clone(
     path: &Path,
     id: &str,
     url: &str,
-    cache: &Arc<Mutex<AuthCache>>,
+    auth_cache: &Arc<Mutex<AuthCache>>,
 ) -> Result<Repository, Error> {
     RepoBuilder::new()
-        .fetch_options(fetch_options(id, cache))
+        .fetch_options(fetch_options(id, auth_cache))
         .clone(url, &path)
 }
 
-pub fn pull(path: &Path, id: &str, cache: &Arc<Mutex<AuthCache>>) -> Result<(), Error> {
+pub fn pull(path: &Path, id: &str, auth_cache: &Arc<Mutex<AuthCache>>) -> Result<(), Error> {
     let repo = Repository::open(path)?;
 
     let mut remote = repo.find_remote("origin")?;
@@ -123,7 +123,7 @@ pub fn pull(path: &Path, id: &str, cache: &Arc<Mutex<AuthCache>>) -> Result<(), 
 
     let branch = String::from_utf8_lossy(head.shorthand_bytes()).to_string();
 
-    remote.fetch(&[&branch], Some(&mut fetch_options(id, cache)), None)?;
+    remote.fetch(&[&branch], Some(&mut fetch_options(id, auth_cache)), None)?;
 
     let fetch_commit = repo.reference_to_annotated_commit(&repo.find_reference("FETCH_HEAD")?)?;
 
