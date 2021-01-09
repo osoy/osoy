@@ -1,0 +1,10 @@
+image: "rust:latest"
+
+cache:
+  paths:
+    - target/
+
+tests:
+  script:
+    - rustc --version && cargo --version
+    - cargo test --workspace --verbose
