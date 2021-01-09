@@ -1,20 +1,18 @@
-<div align="center">
-  <h1>
-    <img src="./logo.svg" />
-    <br />
-    Osoy
-    <br />
-    <a href="https://gitlab.com/osoy/osoy/-/commits/master">
-      <img alt="build" src="https://img.shields.io/gitlab/pipeline/osoy/osoy/master" />
-    </a>
-    <a href="https://crates.io/crates/osoy">
-      <img alt="license" src="https://img.shields.io/crates/l/osoy" />
-    </a>
-    <a href="https://crates.io/crates/osoy">
-      <img alt="version" src="https://img.shields.io/crates/v/osoy" />
-    </a>
-  </h1>
-</div>
+<h1>
+  <img src="./logo.svg" />
+  <br />
+  Osoy
+  <br />
+  <a href="https://gitlab.com/osoy/osoy/-/commits/master">
+    <img alt="build" src="https://img.shields.io/gitlab/pipeline/osoy/osoy/master" />
+  </a>
+  <a href="https://crates.io/crates/osoy">
+    <img alt="license" src="https://img.shields.io/crates/l/osoy" />
+  </a>
+  <a href="https://crates.io/crates/osoy">
+    <img alt="version" src="https://img.shields.io/crates/v/osoy" />
+  </a>
+</h1>
 
 Osoy is a command-line git repository manager which's features include:
 
