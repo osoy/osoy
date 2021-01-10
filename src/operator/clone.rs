@@ -17,12 +17,11 @@ impl Exec for Opt {
         for location in self.targets {
             let id = location.id();
             let path = config.src.join(&id);
+
             if path.exists() {
                 info!("entity '{}' already exists", &id)
             } else {
-                let res = gitutil::clone(&path, &id, &location.url(), &auth_cache);
-                print!("\u{1b}[K");
-                match res {
+                match gitutil::clone(&path, &id, &location.url(), &auth_cache) {
                     Ok(_) => gitutil::log("done", id),
                     Err(err) => {
                         errors += 1;
