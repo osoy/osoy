@@ -52,7 +52,7 @@ impl Location {
                     .map(|route| route.join("/"))
                     .unwrap_or("".to_string())
             ),
-            None => format!("https://{}", self.id(),),
+            None => format!("https://{}", self.id()),
         }
     }
 
