@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://doc.rust-lang.org/carg
 
 ## [Unreleased]
 
+### Added
+
+- Support for importing as a library
+- Support for extensions
+
 ## [0.3.1] - 2021-02-11
 
 ### Fixed
