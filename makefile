@@ -1,5 +1,5 @@
 build:
-	cargo build --release
+	cargo build --release --bin osoy
 
 test:
 	cargo test
@@ -7,4 +7,4 @@ test:
 clean:
 	cargo clean
 
-.PHONY: build clean
+.PHONY: build test clean

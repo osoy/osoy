@@ -1,16 +1,17 @@
-use crate::{link, repo, Config, Exec, Location, StructOpt};
+use crate::{link, repo, Config, Exec, Location};
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(alias = "ln", about = "Create symbolic links for executables")]
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
-    regex: bool,
+    pub regex: bool,
     #[structopt(short, long, help = "Do not prompt")]
-    force: bool,
+    pub force: bool,
     #[structopt(short, long, help = "Print what is being done")]
-    verbose: bool,
+    pub verbose: bool,
     #[structopt(required = true, min_values = 1, help = Location::about())]
-    targets: Vec<Location>,
+    pub targets: Vec<Location>,
 }
 
 impl Exec for Opt {

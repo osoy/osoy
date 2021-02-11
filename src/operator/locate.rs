@@ -1,12 +1,13 @@
-use crate::{repo, Config, Exec, Location, StructOpt};
+use crate::{repo, Config, Exec, Location};
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Print repository's full path")]
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
-    regex: bool,
+    pub regex: bool,
     #[structopt(help = Location::about())]
-    target: Location,
+    pub target: Location,
 }
 
 impl Exec for Opt {

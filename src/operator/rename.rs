@@ -1,18 +1,19 @@
-use crate::{repo, Config, Exec, Location, StructOpt};
+use crate::{repo, Config, Exec, Location};
 use git2::Repository;
 use std::io;
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(aliases = &["mv", "move"], about = "Relocate repository")]
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
-    regex: bool,
+    pub regex: bool,
     #[structopt(short, long, help = "Print what is being done")]
-    verbose: bool,
+    pub verbose: bool,
     #[structopt(help = Location::about())]
-    target: Location,
+    pub target: Location,
     #[structopt(help = Location::about())]
-    destination: Location,
+    pub destination: Location,
 }
 
 impl Exec for Opt {

@@ -1,20 +1,21 @@
-use crate::{repo, Config, Exec, Location, StructOpt};
+use crate::{repo, Config, Exec, Location};
 use std::env::set_current_dir;
 use std::process;
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(aliases = &["ex", "exec"], about = "Execute command in a repository")]
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
-    regex: bool,
+    pub regex: bool,
     #[structopt(short, long, help = "Print what is being done")]
-    verbose: bool,
+    pub verbose: bool,
     #[structopt(help = Location::about())]
-    target: Location,
+    pub target: Location,
     #[structopt(help = "Command to execute in the repository")]
-    command: String,
+    pub command: String,
     #[structopt(help = "Arguments for the command")]
-    arguments: Vec<String>,
+    pub arguments: Vec<String>,
 }
 
 impl Exec for Opt {

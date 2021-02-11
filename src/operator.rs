@@ -1,10 +1,11 @@
-use crate::{Config, Exec, StructOpt};
+use crate::{Config, Exec};
 use structopt::clap::AppSettings;
+use structopt::StructOpt;
 
 macro_rules! operator {
-    ($($oper:tt),*) => {
+    ($($oper:tt),*$(,)?) => {
         $(
-            mod $oper;
+            pub mod $oper;
         )*
 
         #[derive(StructOpt, Debug)]
@@ -18,10 +19,7 @@ macro_rules! operator {
         pub enum Operator {
             $(
                 #[allow(non_camel_case_types)]
-                $oper {
-                    #[structopt(flatten)]
-                    opt: $oper::Opt,
-                },
+                $oper($oper::Opt),
             )*
         }
 
@@ -29,7 +27,7 @@ macro_rules! operator {
             fn exec(self, config: Config) -> i32 {
                 match self {
                     $(
-                        Operator::$oper { opt } => opt.exec(config),
+                        Operator::$oper(opt) => opt.exec(config),
                     )*
                 }
             }
@@ -48,5 +46,5 @@ operator!(
     pull,
     remove,
     rename,
-    unlink
+    unlink,
 );

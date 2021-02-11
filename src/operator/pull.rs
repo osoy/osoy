@@ -1,14 +1,15 @@
-use crate::{gitutil, repo, Config, Exec, Location, StructOpt};
+use crate::{gitutil, repo, Config, Exec, Location};
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Pull from repository remotes")]
 pub struct Opt {
     #[structopt(short, long, help = "Print what is being done")]
-    verbose: bool,
+    pub verbose: bool,
     #[structopt(short, long, help = "Use regular expressions")]
-    regex: bool,
+    pub regex: bool,
     #[structopt(required = true, min_values = 1, help = Location::about())]
-    targets: Vec<Location>,
+    pub targets: Vec<Location>,
 }
 
 impl Exec for Opt {

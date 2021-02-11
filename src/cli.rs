@@ -1,9 +1,11 @@
+#[macro_export]
 macro_rules! info {
     ($($arg:tt)*) => {
         eprintln!("{}: {}", env!("CARGO_PKG_NAME"), format!($($arg)*));
     };
 }
 
+#[macro_export]
 macro_rules! ask_string {
     ($($arg:tt)*) => {
         {
@@ -25,6 +27,7 @@ macro_rules! ask_string {
     };
 }
 
+#[macro_export]
 macro_rules! ask_bool {
     ($($arg:tt)*) => {
         {
@@ -36,6 +39,7 @@ macro_rules! ask_bool {
     };
 }
 
+#[macro_export]
 macro_rules! ask_secret {
     ($($arg:tt)*) => {
         {

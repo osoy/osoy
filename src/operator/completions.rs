@@ -1,12 +1,13 @@
 use super::Operator;
-use crate::{Config, Exec, StructOpt};
+use crate::{Config, Exec};
 use structopt::clap::Shell;
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Generate shell completion script")]
 pub struct Opt {
     #[structopt(possible_values = &Shell::variants())]
-    shell: Shell,
+    pub shell: Shell,
 }
 
 impl Exec for Opt {

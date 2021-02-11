@@ -51,6 +51,6 @@ Make sure that [cargo bin](https://doc.rust-lang.org/stable/cargo/guide/cargo-ho
 ```bash
 git clone https://gitlab.com/osoy/osoy ~/.osoy/src/gitlab.com/osoy/osoy
 cd ~/.osoy/src/gitlab.com/osoy/osoy
-cargo build --release
+cargo build --release --bin osoy
 ./osoy link osoy -fv
 ```

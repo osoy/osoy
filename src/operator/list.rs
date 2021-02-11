@@ -1,27 +1,28 @@
-use crate::{gitutil, link, repo, Config, Exec, Location, StructOpt};
+use crate::{gitutil, link, repo, Config, Exec, Location};
 use git2::Repository;
 use structopt::clap::ArgGroup;
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(alias = "ls", about = "List repositories", group = ArgGroup::with_name("sublist"))]
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
-    regex: bool,
+    pub regex: bool,
     #[structopt(short, long, group = "sublist", help = "List executables")]
-    exe: bool,
+    pub exe: bool,
     #[structopt(
         short = "E",
         long,
         group = "sublist",
         help = "List executables that are linked"
     )]
-    exe_linked: bool,
+    pub exe_linked: bool,
     #[structopt(short, long, group = "sublist", help = "Show git statuses")]
-    git: bool,
+    pub git: bool,
     #[structopt(short, long, help = "Show only entries with details")]
-    only_details: bool,
+    pub only_details: bool,
     #[structopt(help = Location::about())]
-    targets: Vec<Location>,
+    pub targets: Vec<Location>,
 }
 
 impl Exec for Opt {
