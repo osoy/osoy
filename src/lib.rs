@@ -13,3 +13,5 @@ pub use config::Config;
 pub use exec::Exec;
 pub use location::Location;
 pub use operator::Operator;
+
+pub use termion;
