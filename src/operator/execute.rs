@@ -28,6 +28,10 @@ impl Exec for Opt {
                     match set_current_dir(&path) {
                         Ok(_) => match process::Command::new(&self.command)
                             .args(&self.arguments)
+                            .stdin(match self.verbose {
+                                true => process::Stdio::inherit(),
+                                false => process::Stdio::null(),
+                            })
                             .stderr(match self.verbose {
                                 true => process::Stdio::inherit(),
                                 false => process::Stdio::null(),
