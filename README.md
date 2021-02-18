@@ -12,6 +12,9 @@
   <a href="https://crates.io/crates/osoy">
     <img alt="version" src="https://img.shields.io/crates/v/osoy" />
   </a>
+  <a href="https://docs.rs/osoy">
+      <img alt="documentation" src="https://img.shields.io/badge/docs.rs-osoy-blue"/>
+  </a>
 </h1>
 
 Osoy is a command-line git repository manager which's features include:
