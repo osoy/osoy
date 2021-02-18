@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://doc.rust-lang.org/carg
 
 ## [Unreleased]
 
+## [0.4.0] - 2021-02-18
+
 ### Added
 
 - Support for importing as a library
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://doc.rust-lang.org/carg
 
 - Full rewrite
 
-[unreleased]: https://gitlab.com/osoy/osoy/compare/v0.3.1...master
+[unreleased]: https://gitlab.com/osoy/osoy/compare/v0.4.0...master
+[0.4.0]: https://gitlab.com/osoy/osoy/compare/v0.3.1...v0.4.0
 [0.3.1]: https://gitlab.com/osoy/osoy/compare/v0.3.0...v0.3.1
 [0.3.0]: https://gitlab.com/osoy/osoy/tree/v0.3.0
