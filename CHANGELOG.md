@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://doc.rust-lang.org/carg
 
 ## [Unreleased]
 
+### Fixed
+
+- Ensure that regular expressions are compiled only once
+
 ## [0.4.0] - 2021-02-18
 
 ### Added
