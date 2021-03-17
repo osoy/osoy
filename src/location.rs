@@ -4,18 +4,29 @@ use std::str::FromStr;
 use std::{error, fmt};
 
 #[derive(Debug, PartialEq, Clone)]
-enum Protocol {
+pub enum Protocol {
     Ssh(String),
     Other(String),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+type LocationRegex = Vec<Option<Result<Regex, regex::Error>>>;
+
+#[derive(Debug, Clone)]
 pub struct Location {
     protocol: Option<Protocol>,
     id: Vec<String>,
+    regex: Option<LocationRegex>,
 }
 
 impl Location {
+    pub fn new(protocol: Option<Protocol>, id: Vec<String>) -> Self {
+        Self {
+            protocol,
+            id,
+            regex: None,
+        }
+    }
+
     pub fn about() -> &'static str {
         "<[[domain/]author/]package> or url"
     }
@@ -56,19 +67,34 @@ impl Location {
         }
     }
 
-    pub fn matches_re(&self, path: &Path) -> bool {
+    fn get_regex(&mut self) -> &LocationRegex {
+        if self.regex.is_none() {
+            self.regex = Some(
+                self.id
+                    .iter()
+                    .map(|word| {
+                        (!word.is_empty()).then(|| {
+                            Regex::new(&format!(
+                                "^({}{})$",
+                                match word.starts_with("*") {
+                                    true => ".",
+                                    false => "",
+                                },
+                                word
+                            ))
+                        })
+                    })
+                    .collect::<LocationRegex>(),
+            );
+        }
+        self.regex.as_ref().unwrap()
+    }
+
+    pub fn matches_re(&mut self, path: &Path) -> bool {
         let mut path = PathBuf::from(path);
-        for word in self.id.iter().rev() {
-            if word.is_empty()
-                || Regex::new(&format!(
-                    "^({}{})$",
-                    match word.starts_with("*") {
-                        true => ".",
-                        false => "",
-                    },
-                    word
-                ))
-                .map(|re| {
+        for word_re in self.get_regex().iter().rev() {
+            if word_re.as_ref().map_or(true, |re_res| {
+                re_res.as_ref().map_or(false, |re| {
                     re.is_match(
                         path.file_name()
                             .map(|osname| osname.to_str())
@@ -76,8 +102,7 @@ impl Location {
                             .unwrap_or(""),
                     )
                 })
-                .unwrap_or(false)
-            {
+            }) {
                 path.pop();
             } else {
                 return false;
@@ -122,24 +147,26 @@ impl FromStr for Location {
         if s.is_empty() {
             Err(ParseLocationError {})
         } else {
-            let re_other = Regex::new("^([^:/]+)://").unwrap();
-            let re_git = Regex::new("^([^@]+)@([^:]+):|^([^:/@]+):").unwrap();
+            lazy_static! {
+                static ref RE_OTHER: Regex = Regex::new("^([^:/]+)://").unwrap();
+                static ref RE_SSH: Regex = Regex::new("^([^@]+)@([^:]+):|^([^:/@]+):").unwrap();
+            }
 
             let protocol;
             let id: Vec<String>;
 
-            if let Some(caps) = re_other.captures(s) {
+            if let Some(caps) = RE_OTHER.captures(s) {
                 protocol = Some(Protocol::Other(caps[1].into()));
-                id = re_other
+                id = RE_OTHER
                     .replace(s, "")
                     .split("/")
                     .map(|s| s.to_owned())
                     .collect();
-            } else if let Some(caps) = re_git.captures(s) {
+            } else if let Some(caps) = RE_SSH.captures(s) {
                 protocol = Some(Protocol::Ssh(
                     caps.get(1).map(|user| user.into()).unwrap_or("git").into(),
                 ));
-                id = re_git
+                id = RE_SSH
                     .replace(s, "$2$3/")
                     .split("/")
                     .map(|s| s.to_owned())
@@ -149,7 +176,7 @@ impl FromStr for Location {
                 id = s.split("/").map(|s| s.to_owned()).collect();
             }
 
-            Ok(Self { protocol, id })
+            Ok(Self::new(protocol, id))
         }
     }
 }

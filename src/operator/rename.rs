@@ -22,7 +22,7 @@ impl Exec for Opt {
         let Self {
             regex,
             verbose,
-            target,
+            mut target,
             destination,
         } = self;
 

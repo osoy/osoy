@@ -29,12 +29,12 @@ pub fn iterate(dir: &Path) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
 /// Get iterator over repositories that match any of the given targets.
 pub fn iterate_matching(
     dir: &Path,
-    targets: Vec<Location>,
+    mut targets: Vec<Location>,
     regex: bool,
 ) -> io::Result<impl Iterator<Item = PathBuf>> {
     Ok(iterate(dir)?.filter(move |path| {
         targets.len() == 0
-            || targets.iter().any(|location| match regex {
+            || targets.iter_mut().any(|location| match regex {
                 true => location.matches_re(&path),
                 false => location.matches(&path),
             })
