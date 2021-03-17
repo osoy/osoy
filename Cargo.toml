@@ -11,6 +11,7 @@ keywords = ["git", "cli"]
 
 [dependencies]
 git2 = "0.13"
+lazy_static = "1"
 regex = "1"
 structopt = "0.3"
 termion = "1.5"
