@@ -138,24 +138,24 @@ pub fn pull(path: &Path, id: &str, auth_cache: &Arc<Mutex<AuthCache>>) -> Result
     Ok(())
 }
 
-fn status_wt_char(st: &Status) -> Option<&'static char> {
+fn status_wt_char(st: &Status) -> Option<char> {
     match st {
-        s if s.contains(Status::WT_NEW) => Some(&'n'),
-        s if s.contains(Status::WT_MODIFIED) => Some(&'m'),
-        s if s.contains(Status::WT_DELETED) => Some(&'d'),
-        s if s.contains(Status::WT_RENAMED) => Some(&'r'),
-        s if s.contains(Status::WT_TYPECHANGE) => Some(&'t'),
+        s if s.contains(Status::WT_NEW) => Some('n'),
+        s if s.contains(Status::WT_MODIFIED) => Some('m'),
+        s if s.contains(Status::WT_DELETED) => Some('d'),
+        s if s.contains(Status::WT_RENAMED) => Some('r'),
+        s if s.contains(Status::WT_TYPECHANGE) => Some('t'),
         _ => None,
     }
 }
 
-fn status_index_char(st: &Status) -> Option<&'static char> {
+fn status_index_char(st: &Status) -> Option<char> {
     match st {
-        s if s.contains(Status::INDEX_NEW) => Some(&'N'),
-        s if s.contains(Status::INDEX_MODIFIED) => Some(&'M'),
-        s if s.contains(Status::INDEX_DELETED) => Some(&'D'),
-        s if s.contains(Status::INDEX_RENAMED) => Some(&'R'),
-        s if s.contains(Status::INDEX_TYPECHANGE) => Some(&'T'),
+        s if s.contains(Status::INDEX_NEW) => Some('N'),
+        s if s.contains(Status::INDEX_MODIFIED) => Some('M'),
+        s if s.contains(Status::INDEX_DELETED) => Some('D'),
+        s if s.contains(Status::INDEX_RENAMED) => Some('R'),
+        s if s.contains(Status::INDEX_TYPECHANGE) => Some('T'),
         _ => None,
     }
 }
@@ -201,8 +201,8 @@ impl RepoStatus {
                     let st = entry.status();
                     let fname = String::from_utf8_lossy(entry.path_bytes());
                     (
-                        status_index_char(&st).map(|ch| (*ch, fname.to_string())),
-                        status_wt_char(&st).map(|ch| (*ch, fname.to_string())),
+                        status_index_char(&st).map(|ch| (ch, fname.to_string())),
+                        status_wt_char(&st).map(|ch| (ch, fname.to_string())),
                     )
                 })
                 .unzip();
