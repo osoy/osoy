@@ -1,11 +1,10 @@
-use crate::{gitutil, repo, Config, Exec, Location};
+use crate::gitutil::{pull, FetchMessage};
+use crate::{repo, Config, Exec, Location};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Pull from repository remotes")]
 pub struct Opt {
-    #[structopt(short, long, help = "Print what is being done")]
-    pub verbose: bool,
     #[structopt(short, long, help = "Use regular expressions")]
     pub regex: bool,
     #[structopt(required = true, min_values = 1, help = Location::about())]
@@ -18,24 +17,25 @@ impl Exec for Opt {
 
         match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
-                let auth_cache = gitutil::AuthCache::new();
-
-                for path in iter {
-                    let id = path
-                        .strip_prefix(&config.src)
-                        .unwrap()
-                        .display()
-                        .to_string();
-
-                    match gitutil::pull(&path, &id, &auth_cache) {
-                        Ok(_) => gitutil::log("done", id),
-                        Err(err) => {
-                            errors += 1;
-                            gitutil::log("failed", id);
-                            if self.verbose && !format!("{}", err).is_empty() {
-                                gitutil::log("", err);
-                            }
+                let receiver = pull(iter);
+                while let Ok(msg) = receiver.recv() {
+                    match msg {
+                        FetchMessage::Done((path, res)) => {
+                            let id = path
+                                .strip_prefix(&config.src)
+                                .unwrap()
+                                .display()
+                                .to_string();
+                            println!(
+                                "{} {}",
+                                id,
+                                res.is_ok().then(|| "done").unwrap_or_else(|| {
+                                    errors += 1;
+                                    "failed"
+                                })
+                            );
                         }
+                        FetchMessage::Progress(prog) => prog.print(),
                     }
                 }
             }
