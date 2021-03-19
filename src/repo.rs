@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::{fs, io, iter};
 
 /// Get recursive iterator over git repositories in given directory.
-pub fn iterate(dir: &Path) -> io::Result<Box<dyn Iterator<Item = PathBuf>>> {
+pub fn iterate(dir: &Path) -> io::Result<Box<dyn Iterator<Item = PathBuf> + Send + 'static>> {
     match dir.join(".git").exists() {
         true => Ok(Box::new(iter::once(dir.into()))),
         false => match dir.read_dir() {

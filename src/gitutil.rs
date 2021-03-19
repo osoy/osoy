@@ -7,8 +7,8 @@ use std::collections::{HashMap, HashSet};
 use std::io::{stdout, Write};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, Mutex};
-use std::thread;
+use std::sync::{Arc, Mutex, RwLock};
+use std::thread::{spawn, JoinHandle};
 
 #[derive(Default)]
 struct AuthCache {
@@ -89,7 +89,7 @@ impl ProgressObjects {
             let mut stdout = stdout.lock();
             write!(
                 stdout,
-                "\r({:8}:{:8})/{:8}",
+                "\r({}:{})/{}",
                 self.indexed, self.received, self.total
             )
             .ok()
@@ -99,24 +99,28 @@ impl ProgressObjects {
     }
 }
 
-pub type Done = Result<Repository, Error>;
-
 pub enum FetchMessage {
     Progress(ProgressObjects),
-    Done((PathBuf, Done)),
+    Done((PathBuf, Result<Repository, Error>)),
 }
 
 #[derive(Clone)]
 struct Fetch {
+    limit: usize,
+    threads: Arc<RwLock<Vec<JoinHandle<()>>>>,
+    queue: Arc<Mutex<Vec<Sender<()>>>>,
     progress: Arc<Mutex<HashMap<PathBuf, ProgressObjects>>>,
     sender: Sender<FetchMessage>,
 }
 
 impl Fetch {
-    fn new() -> (Self, Receiver<FetchMessage>) {
+    fn new(limit: usize) -> (Self, Receiver<FetchMessage>) {
         let (sender, receiver) = channel();
         (
             Self {
+                limit,
+                threads: Arc::new(RwLock::new(vec![])),
+                queue: Arc::new(Mutex::new(vec![])),
                 progress: Arc::new(Mutex::new(HashMap::new())),
                 sender: sender,
             },
@@ -139,14 +143,35 @@ impl Fetch {
             .is_ok()
     }
 
-    fn post_done(&self, path: &Path, done: Done) {
-        self.progress
-            .lock()
-            .ok()
-            .map(|mut progress| progress.remove(path));
-        self.sender
-            .send(FetchMessage::Done((path.into(), done)))
-            .ok();
+    fn wait_slot(&self) {
+        if self.threads.read().unwrap().len() >= self.limit {
+            let (sender, receiver) = channel();
+            self.queue.lock().unwrap().push(sender);
+            receiver.recv().ok();
+        }
+    }
+
+    fn free_slot(&self) {
+        let mut queue = self.queue.lock().unwrap();
+        if queue.len() > 0 {
+            queue.remove(0).send(()).ok();
+        }
+    }
+
+    fn wait_and_spawn<F>(&self, path: PathBuf, f: F)
+    where
+        F: FnOnce() -> Result<Repository, Error> + Send + 'static,
+    {
+        self.wait_slot();
+        let fetch = self.clone();
+        self.threads.write().unwrap().push(spawn(move || {
+            let res = f();
+            fetch
+                .sender
+                .send(FetchMessage::Done((path.into(), res)))
+                .ok();
+            fetch.free_slot();
+        }));
     }
 }
 
@@ -214,47 +239,38 @@ fn pull_one(
     Ok(repo)
 }
 
-pub fn pull<I>(paths: I) -> Receiver<FetchMessage>
-where
-    I: Iterator<Item = PathBuf>,
-{
+pub fn pull(paths: Vec<PathBuf>, threads: usize) -> Receiver<FetchMessage> {
     let auth_cache = Arc::new(Mutex::new(AuthCache::default()));
-    let (fetch, receiver) = Fetch::new();
+    let (fetch, receiver) = Fetch::new(threads);
 
-    for path in paths {
-        let auth_cache = auth_cache.clone();
-        let fetch = fetch.clone();
-        thread::spawn(move || {
-            fetch
-                .clone()
-                .post_done(&path, pull_one(&path, auth_cache, fetch))
-        });
-    }
+    spawn(move || {
+        for path in paths {
+            let auth_cache = auth_cache.clone();
+            let fetch_clone = fetch.clone();
+            fetch.wait_and_spawn(path.clone(), move || {
+                pull_one(&path, auth_cache, fetch_clone)
+            });
+        }
+    });
 
     receiver
 }
 
-pub type UrlPathPair = (String, PathBuf);
-
-pub fn clone<I>(url_path_pairs: I) -> Receiver<FetchMessage>
-where
-    I: Iterator<Item = UrlPathPair>,
-{
+pub fn clone(url_path_pairs: Vec<(String, PathBuf)>, threads: usize) -> Receiver<FetchMessage> {
     let auth_cache = Arc::new(Mutex::new(AuthCache::default()));
-    let (fetch, receiver) = Fetch::new();
+    let (fetch, receiver) = Fetch::new(threads);
 
-    for (url, path) in url_path_pairs {
-        let auth_cache = auth_cache.clone();
-        let fetch = fetch.clone();
-        thread::spawn(move || {
-            fetch.clone().post_done(
-                &path,
+    spawn(move || {
+        for (url, path) in url_path_pairs {
+            let auth_cache = auth_cache.clone();
+            let fetch_clone = fetch.clone();
+            fetch.wait_and_spawn(path.clone(), move || {
                 RepoBuilder::new()
-                    .fetch_options(fetch_options(&path, auth_cache, fetch))
-                    .clone(&url, &path),
-            );
-        });
-    }
+                    .fetch_options(fetch_options(&path, auth_cache, fetch_clone))
+                    .clone(&url, &path)
+            });
+        }
+    });
 
     receiver
 }

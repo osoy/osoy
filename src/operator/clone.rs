@@ -5,6 +5,8 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Clone repositories")]
 pub struct Opt {
+    #[structopt(short, long, default_value = "10", help = "Count of parallel jobs")]
+    pub parallel: usize,
     #[structopt(required = true, min_values = 1, help = Location::about())]
     pub targets: Vec<Location>,
 }
@@ -16,7 +18,9 @@ impl Exec for Opt {
         let receiver = clone(
             self.targets
                 .iter()
-                .map(|location| (location.url(), config.src.join(&location.id()))),
+                .map(|location| (location.url(), config.src.join(&location.id())))
+                .collect(),
+            self.parallel,
         );
         while let Ok(msg) = receiver.recv() {
             match msg {
