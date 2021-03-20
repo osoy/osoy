@@ -22,7 +22,7 @@ impl Exec for Opt {
                 let receiver = pull(iter.collect(), self.parallel);
                 while let Ok(msg) = receiver.recv() {
                     match msg {
-                        FetchMessage::Done((path, res)) => {
+                        FetchMessage::Done((path, res, prog)) => {
                             let id = path
                                 .strip_prefix(&config.src)
                                 .unwrap()
@@ -36,6 +36,7 @@ impl Exec for Opt {
                                     "failed"
                                 })
                             );
+                            prog.print();
                         }
                         FetchMessage::Progress(prog) => prog.print(),
                     }

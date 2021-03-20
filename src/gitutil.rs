@@ -3,6 +3,7 @@ use git2::build::{CheckoutBuilder, RepoBuilder};
 use git2::{
     Cred, CredentialType, Error, FetchOptions, Progress, RemoteCallbacks, Repository, Status,
 };
+use std::cmp::{max, min};
 use std::collections::{HashMap, HashSet};
 use std::io::{stdout, Write};
 use std::path::{Path, PathBuf};
@@ -87,10 +88,29 @@ impl ProgressObjects {
         let stdout = stdout();
         if termion::is_tty(&stdout) {
             let mut stdout = stdout.lock();
+            let space = 50;
+            let (left, mid, right, part) = match self.total {
+                0 => (0, 0, space, 0),
+                _ => {
+                    let indexed = space * self.indexed / self.total;
+                    let received = space * self.received / self.total;
+                    let lesser = min(indexed, received);
+                    let greater = max(indexed, received);
+                    (
+                        lesser,
+                        greater - lesser,
+                        space - greater,
+                        100 * min(self.indexed, self.received) / self.total,
+                    )
+                }
+            };
             write!(
                 stdout,
-                "\r({}:{})/{}",
-                self.indexed, self.received, self.total
+                "\r[{}{}{}] {}%",
+                "=".repeat(left),
+                "-".repeat(mid),
+                "·".repeat(right),
+                part
             )
             .ok()
             .map(|_| stdout.flush());
@@ -101,7 +121,7 @@ impl ProgressObjects {
 
 pub enum FetchMessage {
     Progress(ProgressObjects),
-    Done((PathBuf, Result<Repository, Error>)),
+    Done((PathBuf, Result<Repository, Error>, ProgressObjects)),
 }
 
 #[derive(Clone)]
@@ -109,7 +129,7 @@ struct Fetch {
     limit: usize,
     threads: Arc<RwLock<Vec<JoinHandle<()>>>>,
     queue: Arc<Mutex<Vec<Sender<()>>>>,
-    progress: Arc<Mutex<HashMap<PathBuf, ProgressObjects>>>,
+    progress: Arc<RwLock<HashMap<PathBuf, ProgressObjects>>>,
     sender: Sender<FetchMessage>,
 }
 
@@ -121,25 +141,28 @@ impl Fetch {
                 limit,
                 threads: Arc::new(RwLock::new(vec![])),
                 queue: Arc::new(Mutex::new(vec![])),
-                progress: Arc::new(Mutex::new(HashMap::new())),
+                progress: Arc::new(RwLock::new(HashMap::new())),
                 sender: sender,
             },
             receiver,
         )
     }
 
+    fn progress(&self) -> ProgressObjects {
+        self.progress
+            .read()
+            .unwrap()
+            .values()
+            .fold(ProgressObjects::default(), |acc, v| acc + *v)
+    }
+
     fn post_progress(&self, path: &Path, prog: ProgressObjects) -> bool {
-        let mut progress = match self.progress.try_lock() {
-            Ok(progress) => progress,
+        match self.progress.try_write() {
+            Ok(mut progress) => progress.insert(path.to_path_buf(), prog),
             Err(_) => return false,
         };
-        progress.insert(path.to_path_buf(), prog);
         self.sender
-            .send(FetchMessage::Progress(
-                progress
-                    .values()
-                    .fold(ProgressObjects::default(), |acc, v| acc + *v),
-            ))
+            .send(FetchMessage::Progress(self.progress()))
             .is_ok()
     }
 
@@ -168,7 +191,7 @@ impl Fetch {
             let res = f();
             fetch
                 .sender
-                .send(FetchMessage::Done((path.into(), res)))
+                .send(FetchMessage::Done((path.into(), res, fetch.progress())))
                 .ok();
             fetch.free_slot();
         }));
