@@ -4,7 +4,7 @@ use git2::{
     Cred, CredentialType, Error, FetchOptions, Progress, RemoteCallbacks, Repository, Status,
 };
 use std::cmp::{max, min};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::io::{stdout, Write};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -14,7 +14,7 @@ use std::thread::{spawn, JoinHandle};
 #[derive(Default)]
 struct AuthCache {
     ssh_password: String,
-    ssh_tries: HashSet<PathBuf>,
+    ssh_tries: HashMap<PathBuf, String>,
 }
 
 impl AuthCache {
@@ -28,12 +28,11 @@ impl AuthCache {
             let key_path = config::home_path(".ssh/id_rsa").unwrap();
             let pubkey_path = config::home_path(".ssh/id_rsa.pub").unwrap();
 
-            if self.ssh_tries.contains(path) {
+            if self.ssh_tries.get(path) == Some(&self.ssh_password) {
                 self.ssh_password = ask_secret!("password for '{}':", key_path.display());
-                self.ssh_tries.remove(path);
-            } else {
-                self.ssh_tries.insert(path.into());
             }
+            self.ssh_tries
+                .insert(path.into(), self.ssh_password.clone());
 
             Cred::ssh_key(
                 &match username {
@@ -127,6 +126,7 @@ pub enum FetchMessage {
 #[derive(Clone)]
 struct Fetch {
     limit: usize,
+    auth_cache: Arc<Mutex<AuthCache>>,
     threads: Arc<RwLock<Vec<JoinHandle<()>>>>,
     queue: Arc<Mutex<Vec<Sender<()>>>>,
     progress: Arc<RwLock<HashMap<PathBuf, ProgressObjects>>>,
@@ -139,6 +139,7 @@ impl Fetch {
         (
             Self {
                 limit,
+                auth_cache: Arc::new(Mutex::new(AuthCache::default())),
                 threads: Arc::new(RwLock::new(vec![])),
                 queue: Arc::new(Mutex::new(vec![])),
                 progress: Arc::new(RwLock::new(HashMap::new())),
@@ -146,6 +147,18 @@ impl Fetch {
             },
             receiver,
         )
+    }
+
+    fn credentials(
+        &self,
+        path: &Path,
+        username: Option<&str>,
+        allowed_types: CredentialType,
+    ) -> Result<Cred, Error> {
+        self.auth_cache
+            .lock()
+            .unwrap()
+            .credentials(path, username, allowed_types)
     }
 
     fn progress(&self) -> ProgressObjects {
@@ -198,19 +211,13 @@ impl Fetch {
     }
 }
 
-fn fetch_options<'cb>(
-    path: &'cb Path,
-    auth_cache: Arc<Mutex<AuthCache>>,
-    fetch: Fetch,
-) -> FetchOptions<'cb> {
+fn fetch_options<'cb>(path: &'cb Path, fetch: Fetch) -> FetchOptions<'cb> {
     let mut callbacks = RemoteCallbacks::new();
     {
         let path = path.clone();
+        let fetch = fetch.clone();
         callbacks.credentials(move |_, username, allowed_types| {
-            auth_cache
-                .lock()
-                .unwrap()
-                .credentials(path, username, allowed_types)
+            fetch.credentials(path, username, allowed_types)
         });
     }
     {
@@ -224,11 +231,7 @@ fn fetch_options<'cb>(
     options
 }
 
-fn pull_one(
-    path: &Path,
-    auth_cache: Arc<Mutex<AuthCache>>,
-    fetch: Fetch,
-) -> Result<Repository, Error> {
+fn pull_one(path: &Path, fetch: Fetch) -> Result<Repository, Error> {
     let repo = Repository::open(path)?;
 
     {
@@ -241,11 +244,7 @@ fn pull_one(
 
         let branch = String::from_utf8_lossy(head.shorthand_bytes()).to_string();
 
-        remote.fetch(
-            &[&branch],
-            Some(&mut fetch_options(path, auth_cache, fetch)),
-            None,
-        )?;
+        remote.fetch(&[&branch], Some(&mut fetch_options(path, fetch)), None)?;
 
         let fetch_commit =
             repo.reference_to_annotated_commit(&repo.find_reference("FETCH_HEAD")?)?;
@@ -263,16 +262,12 @@ fn pull_one(
 }
 
 pub fn pull(paths: Vec<PathBuf>, threads: usize) -> Receiver<FetchMessage> {
-    let auth_cache = Arc::new(Mutex::new(AuthCache::default()));
     let (fetch, receiver) = Fetch::new(threads);
 
     spawn(move || {
         for path in paths {
-            let auth_cache = auth_cache.clone();
             let fetch_clone = fetch.clone();
-            fetch.wait_and_spawn(path.clone(), move || {
-                pull_one(&path, auth_cache, fetch_clone)
-            });
+            fetch.wait_and_spawn(path.clone(), move || pull_one(&path, fetch_clone));
         }
     });
 
@@ -280,16 +275,14 @@ pub fn pull(paths: Vec<PathBuf>, threads: usize) -> Receiver<FetchMessage> {
 }
 
 pub fn clone(url_path_pairs: Vec<(String, PathBuf)>, threads: usize) -> Receiver<FetchMessage> {
-    let auth_cache = Arc::new(Mutex::new(AuthCache::default()));
     let (fetch, receiver) = Fetch::new(threads);
 
     spawn(move || {
         for (url, path) in url_path_pairs {
-            let auth_cache = auth_cache.clone();
             let fetch_clone = fetch.clone();
             fetch.wait_and_spawn(path.clone(), move || {
                 RepoBuilder::new()
-                    .fetch_options(fetch_options(&path, auth_cache, fetch_clone))
+                    .fetch_options(fetch_options(&path, fetch_clone))
                     .clone(&url, &path)
             });
         }
