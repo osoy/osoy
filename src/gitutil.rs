@@ -54,11 +54,21 @@ impl AuthCache {
     }
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct ProgressObjects {
     pub total: usize,
     pub received: usize,
     pub indexed: usize,
+}
+
+impl Default for ProgressObjects {
+    fn default() -> Self {
+        Self {
+            total: 1,
+            received: 0,
+            indexed: 0,
+        }
+    }
 }
 
 impl From<Progress<'_>> for ProgressObjects {
@@ -169,7 +179,7 @@ impl Fetch {
             .fold(ProgressObjects::default(), |acc, v| acc + *v)
     }
 
-    fn post_progress(&self, path: &Path, prog: ProgressObjects) -> bool {
+    fn update_progress(&self, path: &Path, prog: ProgressObjects) -> bool {
         match self.progress.try_write() {
             Ok(mut progress) => progress.insert(path.to_path_buf(), prog),
             Err(_) => return false,
@@ -177,6 +187,25 @@ impl Fetch {
         self.sender
             .send(FetchMessage::Progress(self.progress()))
             .is_ok()
+    }
+
+    fn init_progress(&self, path: PathBuf) {
+        self.progress
+            .write()
+            .map(|mut progress| progress.insert(path, ProgressObjects::default()))
+            .ok();
+    }
+
+    fn complete_progress(&self, path: &Path) {
+        self.progress
+            .write()
+            .map(|mut progress| {
+                progress.get_mut(path).map(|mut prog| {
+                    prog.received = prog.total;
+                    prog.indexed = prog.total;
+                })
+            })
+            .ok();
     }
 
     fn wait_slot(&self) {
@@ -201,10 +230,12 @@ impl Fetch {
         self.wait_slot();
         let fetch = self.clone();
         self.threads.write().unwrap().push(spawn(move || {
+            fetch.init_progress(path.clone());
             let res = f();
+            fetch.complete_progress(&path);
             fetch
                 .sender
-                .send(FetchMessage::Done((path.into(), res, fetch.progress())))
+                .send(FetchMessage::Done((path, res, fetch.progress())))
                 .ok();
             fetch.free_slot();
         }));
@@ -222,7 +253,7 @@ fn fetch_options<'cb>(path: &'cb Path, fetch: Fetch) -> FetchOptions<'cb> {
     }
     {
         let path = path.clone();
-        callbacks.transfer_progress(move |prog| fetch.post_progress(path, prog.into()));
+        callbacks.transfer_progress(move |prog| fetch.update_progress(path, prog.into()));
     }
 
     let mut options = FetchOptions::new();
