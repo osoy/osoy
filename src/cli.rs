@@ -10,17 +10,22 @@ macro_rules! ask_string {
     ($($arg:tt)*) => {
         {
             use termion::input::TermRead;
-
-            eprint!("{} ", format!($($arg)*));
+            use std::io::Write;
 
             let stdin = std::io::stdin();
             let mut stdin = stdin.lock();
+            let stdout = std::io::stdout();
+            let mut stdout = stdout.lock();
+            let stderr = std::io::stderr();
+            let _stderr = stderr.lock();
 
+            write!(stdout, "{} ", format!($($arg)*)).ok();
+            stdout.flush().ok();
             match stdin.read_line().ok().flatten() {
                 Some(line) => line,
                 None => {
-                    eprintln!();
-                    "".into()
+                    write!(stdout, "\n").ok();
+                    std::process::exit(1)
                 }
             }
         }
@@ -44,21 +49,23 @@ macro_rules! ask_secret {
     ($($arg:tt)*) => {
         {
             use termion::input::TermRead;
-
-            eprint!("{} ", format!($($arg)*));
+            use std::io::Write;
 
             let stdin = std::io::stdin();
             let mut stdin = stdin.lock();
             let stdout = std::io::stdout();
             let mut stdout = stdout.lock();
+            let stderr = std::io::stderr();
+            let _stderr = stderr.lock();
 
+            write!(stdout, "{} ", format!($($arg)*)).ok();
+            stdout.flush().ok();
             let secret = stdin.read_passwd(&mut stdout)
                 .ok()
-                .flatten()
-                .unwrap_or("".into());
+                .flatten();
 
-            eprintln!();
-            secret
+            write!(stdout, "\n").ok();
+            secret.unwrap_or_else(|| std::process::exit(1))
         }
     };
 }
