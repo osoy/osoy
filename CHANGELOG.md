@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://doc.rust-lang.org/carg
 
 ## [Unreleased]
 
+### Added
+
+- Added `--parallel` flag for pull and clone operations to the number of parallel jobs
+
 ### Fixed
 
 - Ensure that regular expressions are compiled only once
