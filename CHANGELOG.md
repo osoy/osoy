@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.4.1] - 2021-07-26
+
 ### Added
 
 - `--parallel` flag to pull & clone operations which denotes the number of
@@ -37,7 +39,8 @@ and this project adheres to
 
 - Full rewrite
 
-[unreleased]: https://gitlab.com/osoy/osoy/compare/v0.4.0...master
+[unreleased]: https://gitlab.com/osoy/osoy/compare/v0.4.1...master
+[0.4.1]: https://gitlab.com/osoy/osoy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://gitlab.com/osoy/osoy/compare/v0.3.1...v0.4.0
 [0.3.1]: https://gitlab.com/osoy/osoy/compare/v0.3.0...v0.3.1
 [0.3.0]: https://gitlab.com/osoy/osoy/tree/v0.3.0

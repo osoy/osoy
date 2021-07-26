@@ -1,6 +1,6 @@
 [package]
 name = "osoy"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Emil Rasmus Merzin <rasmusmerzin@gmail.com>"]
 edition = "2018"
 description = "Command-line git repository manager"
