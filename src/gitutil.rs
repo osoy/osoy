@@ -262,7 +262,7 @@ fn fetch_options<'cb>(path: &'cb Path, fetch: Fetch) -> FetchOptions<'cb> {
     options
 }
 
-fn pull_one(path: &Path, fetch: Fetch) -> Result<Repository, Error> {
+fn pull_one(path: &Path, fetch: Fetch, overwrite: bool) -> Result<Repository, Error> {
     let repo = Repository::open(path)?;
 
     {
@@ -285,20 +285,34 @@ fn pull_one(path: &Path, fetch: Fetch) -> Result<Repository, Error> {
             head.set_target(fetch_commit.id(), "pull: Fast-forward")?;
             repo.checkout_head(Some(CheckoutBuilder::default().force()))?;
         } else if analysis.0.is_normal() {
-            return Err(Error::from_str("merge unimplemented"));
+            if overwrite {
+                head.set_target(fetch_commit.id(), "pull: Overwrite")?;
+                repo.checkout_head(Some(
+                    CheckoutBuilder::default()
+                        .allow_conflicts(true)
+                        .conflict_style_merge(true)
+                        .force(),
+                ))?;
+            } else {
+                return Err(Error::from_str(
+                    "Merge is unimplemented but you can use flag --force to overwrite",
+                ));
+            }
         }
     }
 
     Ok(repo)
 }
 
-pub fn pull(paths: Vec<PathBuf>, threads: usize) -> Receiver<FetchMessage> {
+pub fn pull(paths: Vec<PathBuf>, threads: usize, overwrite: bool) -> Receiver<FetchMessage> {
     let (fetch, receiver) = Fetch::new(threads);
 
     spawn(move || {
         for path in paths {
             let fetch_clone = fetch.clone();
-            fetch.wait_and_spawn(path.clone(), move || pull_one(&path, fetch_clone));
+            fetch.wait_and_spawn(path.clone(), move || {
+                pull_one(&path, fetch_clone, overwrite)
+            });
         }
     });
 

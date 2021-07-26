@@ -3,13 +3,17 @@
 All notable changes to osoy will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0),
-and this project adheres to [Semantic Versioning](https://doc.rust-lang.org/cargo/reference/semver.html).
+and this project adheres to
+[Semantic Versioning](https://doc.rust-lang.org/cargo/reference/semver.html).
 
 ## [Unreleased]
 
 ### Added
 
-- Added `--parallel` flag for pull and clone operations to the number of parallel jobs
+- `--parallel` flag to pull & clone operations which denotes the number of
+  parallel jobs
+- `--verbose` flag to pull & clone operations
+- `--force` flag to pull operation
 
 ### Fixed
 

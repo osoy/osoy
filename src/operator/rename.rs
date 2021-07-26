@@ -8,7 +8,7 @@ use structopt::StructOpt;
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
     pub regex: bool,
-    #[structopt(short, long, help = "Print what is being done")]
+    #[structopt(short, long, help = "Show detailed output")]
     pub verbose: bool,
     #[structopt(help = Location::about())]
     pub target: Location,

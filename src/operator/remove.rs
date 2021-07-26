@@ -8,7 +8,7 @@ pub struct Opt {
     pub regex: bool,
     #[structopt(short, long, help = "Do not prompt")]
     pub force: bool,
-    #[structopt(short, long, help = "Print what is being done")]
+    #[structopt(short, long, help = "Show detailed output")]
     pub verbose: bool,
     #[structopt(required = true, min_values = 1, help = Location::about())]
     pub targets: Vec<Location>,

@@ -9,6 +9,8 @@ pub struct Opt {
     pub parallel: usize,
     #[structopt(required = true, min_values = 1, help = Location::about())]
     pub targets: Vec<Location>,
+    #[structopt(short, long, help = "Show detailed output")]
+    pub verbose: bool,
 }
 
 impl Exec for Opt {
@@ -33,11 +35,17 @@ impl Exec for Opt {
                     println!(
                         "{} {}",
                         id,
-                        res.is_ok().then(|| "done").unwrap_or_else(|| {
-                            errors += 1;
-                            repo::remove(&config.bin, &path).ok();
-                            "failed"
-                        })
+                        match res {
+                            Ok(_) => "done",
+                            Err(err) => {
+                                if self.verbose {
+                                    println!("{}", err);
+                                }
+                                errors += 1;
+                                repo::remove(&config.bin, &path).ok();
+                                "failed"
+                            }
+                        }
                     );
                     prog.print();
                 }
