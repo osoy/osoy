@@ -14,6 +14,7 @@ and this project adheres to
   parallel jobs
 - `--verbose` flag to pull & clone operations
 - `--force` flag to pull operation
+- Denote if repo is up to date on pull
 
 ### Fixed
 

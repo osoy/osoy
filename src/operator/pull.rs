@@ -36,13 +36,13 @@ impl Exec for Opt {
                                 "{} {}",
                                 id,
                                 match res {
-                                    Ok(_) => "done",
+                                    Ok((_, msg)) => msg,
                                     Err(err) => {
                                         if self.verbose {
                                             println!("{}", err);
                                         }
                                         errors += 1;
-                                        "failed"
+                                        "failed".into()
                                     }
                                 }
                             );
