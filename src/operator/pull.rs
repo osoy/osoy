@@ -11,6 +11,10 @@ pub struct Opt {
     pub regex: bool,
     #[structopt(required = true, min_values = 1, help = Location::about())]
     pub targets: Vec<Location>,
+    #[structopt(short, long, help = "Overwrite possible differences")]
+    pub force: bool,
+    #[structopt(short, long, help = "Show detailed output")]
+    pub verbose: bool,
 }
 
 impl Exec for Opt {
@@ -19,7 +23,7 @@ impl Exec for Opt {
 
         match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
-                let receiver = pull(iter.collect(), self.parallel);
+                let receiver = pull(iter.collect(), self.parallel, self.force);
                 while let Ok(msg) = receiver.recv() {
                     match msg {
                         FetchMessage::Done((path, res, prog)) => {
@@ -31,10 +35,16 @@ impl Exec for Opt {
                             println!(
                                 "{} {}",
                                 id,
-                                res.is_ok().then(|| "done").unwrap_or_else(|| {
-                                    errors += 1;
-                                    "failed"
-                                })
+                                match res {
+                                    Ok(_) => "done",
+                                    Err(err) => {
+                                        if self.verbose {
+                                            println!("{}", err);
+                                        }
+                                        errors += 1;
+                                        "failed"
+                                    }
+                                }
                             );
                             prog.print();
                         }
