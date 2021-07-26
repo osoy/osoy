@@ -130,7 +130,13 @@ impl ProgressObjects {
 
 pub enum FetchMessage {
     Progress(ProgressObjects),
-    Done((PathBuf, Result<Repository, Error>, ProgressObjects)),
+    Done(
+        (
+            PathBuf,
+            Result<(Repository, String), Error>,
+            ProgressObjects,
+        ),
+    ),
 }
 
 #[derive(Clone)]
@@ -225,7 +231,7 @@ impl Fetch {
 
     fn wait_and_spawn<F>(&self, path: PathBuf, f: F)
     where
-        F: FnOnce() -> Result<Repository, Error> + Send + 'static,
+        F: FnOnce() -> Result<(Repository, String), Error> + Send + 'static,
     {
         self.wait_slot();
         let fetch = self.clone();
@@ -262,8 +268,9 @@ fn fetch_options<'cb>(path: &'cb Path, fetch: Fetch) -> FetchOptions<'cb> {
     options
 }
 
-fn pull_one(path: &Path, fetch: Fetch, overwrite: bool) -> Result<Repository, Error> {
+fn pull_one(path: &Path, fetch: Fetch, overwrite: bool) -> Result<(Repository, String), Error> {
     let repo = Repository::open(path)?;
+    let mut message = "done";
 
     {
         let mut remote = repo.find_remote("origin")?;
@@ -281,7 +288,9 @@ fn pull_one(path: &Path, fetch: Fetch, overwrite: bool) -> Result<Repository, Er
             repo.reference_to_annotated_commit(&repo.find_reference("FETCH_HEAD")?)?;
 
         let analysis = repo.merge_analysis(&[&fetch_commit])?;
-        if analysis.0.is_fast_forward() {
+        if analysis.0.is_up_to_date() {
+            message = "up-to-date";
+        } else if analysis.0.is_fast_forward() {
             head.set_target(fetch_commit.id(), "pull: Fast-forward")?;
             repo.checkout_head(Some(CheckoutBuilder::default().force()))?;
         } else if analysis.0.is_normal() {
@@ -298,10 +307,12 @@ fn pull_one(path: &Path, fetch: Fetch, overwrite: bool) -> Result<Repository, Er
                     "Merge is unimplemented but you can use flag --force to overwrite",
                 ));
             }
+        } else {
+            return Err(Error::from_str("Unimplemented scenario"));
         }
     }
 
-    Ok(repo)
+    Ok((repo, message.into()))
 }
 
 pub fn pull(paths: Vec<PathBuf>, threads: usize, overwrite: bool) -> Receiver<FetchMessage> {
@@ -329,6 +340,7 @@ pub fn clone(url_path_pairs: Vec<(String, PathBuf)>, threads: usize) -> Receiver
                 RepoBuilder::new()
                     .fetch_options(fetch_options(&path, fetch_clone))
                     .clone(&url, &path)
+                    .map(|repo| (repo, "done".into()))
             });
         }
     });
