@@ -3,8 +3,8 @@
   <br />
   Osoy
   <br />
-  <a href="https://gitlab.com/osoy/osoy/-/commits/master">
-    <img alt="build" src="https://img.shields.io/gitlab/pipeline/osoy/osoy/master" />
+  <a href="https://gitlab.com/osoy/osoy/-/commits/main">
+    <img alt="build" src="https://img.shields.io/gitlab/pipeline/osoy/osoy/main" />
   </a>
   <a href="https://crates.io/crates/osoy">
     <img alt="license" src="https://img.shields.io/crates/l/osoy" />

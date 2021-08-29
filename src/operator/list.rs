@@ -100,7 +100,6 @@ impl Exec for Opt {
                     if !self.only_details
                         || lines_exe.as_ref().map(|l| !l.is_empty()).unwrap_or(false)
                         || lines_git.as_ref().map(|l| !l.is_empty()).unwrap_or(false)
-                        || branch.as_ref().map(|b| b != "master").unwrap_or(self.git)
                         || graph
                             .as_ref()
                             .map(|(ahead, behind)| *ahead != 0 || *behind != 0)
