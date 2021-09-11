@@ -4,18 +4,14 @@ use std::process::{Command, Stdio};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
-#[structopt(aliases = &["ex", "exec"], about = "Execute command in a repository")]
+#[structopt(alias = "mk", about = "Run make in repositories")]
 pub struct Opt {
     #[structopt(short, long, help = "Use regular expressions")]
     pub regex: bool,
     #[structopt(short, long, help = "Run interactively")]
     pub interactive: bool,
-    #[structopt(help = Location::about())]
-    pub target: Location,
-    #[structopt(help = "Command to execute in the repository")]
-    pub command: String,
-    #[structopt(help = "Arguments for the command")]
-    pub arguments: Vec<String>,
+    #[structopt(required = true, min_values = 1, help = Location::about())]
+    pub targets: Vec<Location>,
 }
 
 impl Exec for Opt {
@@ -29,7 +25,7 @@ impl Exec for Opt {
                 .unwrap_or(Stdio::null())
         };
 
-        match repo::iterate_matching_exists(&config.src, vec![self.target], self.regex) {
+        match repo::iterate_matching_exists(&config.src, self.targets, self.regex) {
             Ok(iter) => {
                 for path in iter {
                     if interactive {
@@ -38,10 +34,9 @@ impl Exec for Opt {
                         print!("{}..", path.strip_prefix(&config.src).unwrap().display());
                         stdout().flush().ok();
                     }
-                    let status = Command::new(&self.command)
+                    let status = Command::new("make")
                         .current_dir(&path)
                         .env("PWD", path.display().to_string())
-                        .args(&self.arguments)
                         .stdin(io_dest())
                         .stderr(io_dest())
                         .stdout(io_dest())
@@ -61,7 +56,7 @@ impl Exec for Opt {
                         }
                         Err(err) => {
                             errors += 1;
-                            info!("failed to execute '{}': {}", self.command, err)
+                            info!("failed to execute make: {}", err)
                         }
                     }
                 }

@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `make` operator
+
+### Changed
+
+- Renamed `execute` flag `--verbose` to `--interactive`
+
 ## [0.4.1] - 2021-07-26
 
 ### Added

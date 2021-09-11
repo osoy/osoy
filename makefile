@@ -1,5 +1,5 @@
 build:
-	cargo build --release --bin osoy
+	cargo build --release
 
 test:
 	cargo test

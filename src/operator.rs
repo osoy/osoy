@@ -42,6 +42,7 @@ operator!(
     link,
     list,
     locate,
+    make,
     new,
     pull,
     remove,
