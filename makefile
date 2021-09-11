@@ -1,10 +1,12 @@
 build:
-	cargo build --release
+	@cargo build --release
+	@rm -f osoy
+	@mv target/release/osoy osoy
 
 test:
-	cargo test
+	@cargo test
 
 clean:
-	cargo clean
+	@cargo clean
 
 .PHONY: build test clean
