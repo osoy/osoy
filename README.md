@@ -63,12 +63,13 @@ yay -Sy osoy-bin
 ```bash
 git clone https://gitlab.com/osoy/osoy ~/.osoy/src/gitlab.com/osoy/osoy
 cd ~/.osoy/src/gitlab.com/osoy/osoy
-cargo build --release
+make
 ./osoy link osoy -fv
 ```
 
-## Updating
+Updating Osoy with Osoy
 
-Pull updates with `osoy pull osoy`.
-
-Recompile with `osoy execute osoy make` or `osoy execute osoy -- cargo build --release`.
+```
+osoy pull osoy
+osoy make osoy
+```
