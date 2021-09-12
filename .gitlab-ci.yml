@@ -2,6 +2,7 @@ image: "rust:latest"
 
 stages:
   - test
+  - build
   - deploy
   - publish
 
@@ -15,26 +16,42 @@ test:
     - rustc --version && cargo --version
     - cargo test --workspace --verbose
 
-deploy:
+build:
+  stage: build
+  script:
+    - cargo build --release
+    - strip target/release/osoy
+
+sourceforge:
   stage: deploy
   rules:
     - if: $CI_COMMIT_TAG
   variables:
     SOURCEFORGE_KEY: $SOURCEFORGE_KEY
   script:
-    - make
+    - cp -f target/release/osoy osoy
     - tar -czf osoy-$CI_COMMIT_TAG.tar.gz osoy
-    - tar -cjf osoy-$CI_COMMIT_TAG.tar.bz2 osoy
-    - sha1sum osoy-$CI_COMMIT_TAG.tar* > osoy-$CI_COMMIT_TAG.sha1.txt
-    - md5sum osoy-$CI_COMMIT_TAG.tar* > osoy-$CI_COMMIT_TAG.md5.txt
+    - tar -czf osoy-$CI_COMMIT_TAG-src.tar.gz src Cargo.{toml,lock} Makefile
+    - sha1sum osoy-$CI_COMMIT_TAG{,-src}.tar.gz > osoy-$CI_COMMIT_TAG.sha1.txt
+    - md5sum osoy-$CI_COMMIT_TAG{,-src}.tar.gz > osoy-$CI_COMMIT_TAG.md5.txt
+    - cp -f osoy-$CI_COMMIT_TAG.{sha1,md5}.txt target
+    - cp -f CHANGELOG.md README.md
     - mkdir -p ~/.ssh
-    - printf "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-    - chmod 600 $SOURCEFORGE_KEY
-    - mv -f CHANGELOG.md README.md
-    - scp -i $SOURCEFORGE_KEY README.md osoy-$CI_COMMIT_TAG* rasmusmerzin@frs.sourceforge.net:/home/frs/project/osoy
-    - mv osoy-$CI_COMMIT_TAG*.txt target
+    - cp -f $SOURCEFORGE_KEY ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - printf 'Host *\n\tStrictHostKeyChecking no\n\n' > ~/.ssh/config
+    - scp README.md osoy-$CI_COMMIT_TAG* rasmusmerzin@frs.sourceforge.net:/home/frs/project/osoy
 
-publish_gitlab:
+crates:
+  stage: publish
+  rules:
+    - if: $CI_COMMIT_TAG
+  variables:
+    TOKEN: $CRATES_TOKEN
+  script:
+    - cargo publish --token $TOKEN
+
+gitlab:
   stage: publish
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
@@ -49,15 +66,60 @@ publish_gitlab:
       --tag-name $CI_COMMIT_TAG
       --description "$DESC"
       --assets-link "{\"name\":\"osoy-$CI_COMMIT_TAG.tar.gz\",\"url\":\"https://downloads.sourceforge.net/project/osoy/osoy-$CI_COMMIT_TAG.tar.gz\"}"
-      --assets-link "{\"name\":\"osoy-$CI_COMMIT_TAG.tar.bz2\",\"url\":\"https://downloads.sourceforge.net/project/osoy/osoy-$CI_COMMIT_TAG.tar.bz2\"}"
+      --assets-link "{\"name\":\"osoy-$CI_COMMIT_TAG-src.tar.gz\",\"url\":\"https://downloads.sourceforge.net/project/osoy/osoy-$CI_COMMIT_TAG-src.tar.gz\"}"
       --assets-link "{\"name\":\"osoy-$CI_COMMIT_TAG.sha1.txt\",\"url\":\"https://downloads.sourceforge.net/project/osoy/osoy-$CI_COMMIT_TAG.sha1.txt\"}"
       --assets-link "{\"name\":\"osoy-$CI_COMMIT_TAG.md5.txt\",\"url\":\"https://downloads.sourceforge.net/project/osoy/osoy-$CI_COMMIT_TAG.md5.txt\"}"
 
-publish_crates:
+aur:
   stage: publish
   rules:
     - if: $CI_COMMIT_TAG
   variables:
-    TOKEN: $CRATES_TOKEN
+    AUR_KEY: $AUR_KEY
   script:
-    - cargo publish --token $TOKEN
+    - version=$(sed -n 's/^version\s*=\s*"\(.*\)".*/\1/p' Cargo.toml | head -n1)
+    - echo $version
+    - mkdir -p ~/.ssh
+    - cp -f $AUR_KEY ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - printf 'Host *\n\tStrictHostKeyChecking no\n\n' > ~/.ssh/config
+    - git config --global user.name 'Emil Rasmus Merzin'
+    - git config --global user.email rasmusmerzin@gmail.com
+    - git clone ssh://aur@aur.archlinux.org/osoy     osoy-src
+    - git clone ssh://aur@aur.archlinux.org/osoy-bin osoy-bin
+    - find aur/src -mindepth 1 -maxdepth 1 | while read -r f; do cp -vrf "$f" osoy-src; done
+    - find aur/bin -mindepth 1 -maxdepth 1 | while read -r f; do cp -vrf "$f" osoy-bin; done
+    - cd osoy-src
+    - SHA1=$(sed -n 's/^\(.*\)  osoy-'"$CI_COMMIT_TAG"'-src.tar.gz$/\1/p' ../target/osoy-$CI_COMMIT_TAG.sha1.txt)
+    - MD5=$(sed -n 's/^\(.*\)  osoy-'"$CI_COMMIT_TAG"'-src.tar.gz$/\1/p' ../target/osoy-$CI_COMMIT_TAG.md5.txt)
+    - sed -i 's/^pkgver=.*$/pkgver='"$version"'/' PKGBUILD
+    - sed -i 's/^pkgrel=.*$/pkgrel=1/' PKGBUILD
+    - sed -i 's/^sha1sums=.*$/sha1sums=('"'$SHA1'"')/' PKGBUILD
+    - sed -i 's/^md5sums=.*$/md5sums=('"'$MD5'"')/' PKGBUILD
+    - sed -i 's/pkgver = .*$/pkgver = '"$version"'/' .SRCINFO
+    - sed -i 's/pkgrel = .*$/pkgrel = 1/' .SRCINFO
+    - sed -i 's/sha1sums = .*$/sha1sums = ('"'$SHA1'"')/' .SRCINFO
+    - sed -i 's/md5sums = .*$/md5sums = ('"'$MD5'"')/' .SRCINFO
+    - cat PKGBUILD
+    - cat .SRCINFO
+    - git diff
+    - git add .
+    - git commit -m $CI_COMMIT_TAG
+    - git push
+    - cd ../osoy-bin
+    - SHA1=$(sed -n 's/^\(.*\)  osoy-'"$CI_COMMIT_TAG"'.tar.gz$/\1/p' ../target/osoy-$CI_COMMIT_TAG.sha1.txt)
+    - MD5=$(sed -n 's/^\(.*\)  osoy-'"$CI_COMMIT_TAG"'.tar.gz$/\1/p' ../target/osoy-$CI_COMMIT_TAG.md5.txt)
+    - sed -i 's/^pkgver=.*$/pkgver='"$version"'/' PKGBUILD
+    - sed -i 's/^pkgrel=.*$/pkgrel=1/' PKGBUILD
+    - sed -i 's/^sha1sums=.*$/sha1sums=('"'$SHA1'"')/' PKGBUILD
+    - sed -i 's/^md5sums=.*$/md5sums=('"'$MD5'"')/' PKGBUILD
+    - sed -i 's/pkgver = .*$/pkgver = '"$version"'/' .SRCINFO
+    - sed -i 's/pkgrel = .*$/pkgrel = 1/' .SRCINFO
+    - sed -i 's/sha1sums = .*$/sha1sums = ('"'$SHA1'"')/' .SRCINFO
+    - sed -i 's/md5sums = .*$/md5sums = ('"'$MD5'"')/' .SRCINFO
+    - cat PKGBUILD
+    - cat .SRCINFO
+    - git diff
+    - git add .
+    - git commit -m $CI_COMMIT_TAG
+    - git push
