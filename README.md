@@ -6,14 +6,17 @@
   <a href="https://gitlab.com/osoy/osoy/-/commits/main">
     <img alt="build" src="https://img.shields.io/gitlab/pipeline/osoy/osoy/main" />
   </a>
-  <a href="https://crates.io/crates/osoy">
-    <img alt="license" src="https://img.shields.io/crates/l/osoy" />
-  </a>
-  <a href="https://crates.io/crates/osoy">
-    <img alt="version" src="https://img.shields.io/crates/v/osoy" />
-  </a>
   <a href="https://docs.rs/osoy">
-      <img alt="documentation" src="https://img.shields.io/badge/docs.rs-osoy-blue"/>
+    <img alt="docs.rs" src="https://img.shields.io/docsrs/osoy"/>
+  </a>
+  <a href="https://crates.io/crates/osoy">
+    <img alt="crates.io" src="https://img.shields.io/crates/v/osoy" />
+  </a>
+  <a href="https://aur.archlinux.org/packages/osoy-bin">
+    <img alt="aur.archlinux.org" src="https://img.shields.io/aur/version/osoy-bin"/>
+  </a>
+  <a href="https://sourceforge.net/p/osoy">
+    <img alt="sourceforge.net" src="https://img.shields.io/sourceforge/dt/osoy"/>
   </a>
 </h1>
 
@@ -46,6 +49,12 @@ cargo install osoy
 ```
 
 Make sure that [cargo bin](https://doc.rust-lang.org/stable/cargo/guide/cargo-home.html#directories) is in your `PATH` environment variable.
+
+### AUR
+
+```
+yay -Sy osoy-bin
+```
 
 ### Compiling from Source
 
