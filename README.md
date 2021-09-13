@@ -53,7 +53,7 @@ Make sure that [cargo bin](https://doc.rust-lang.org/stable/cargo/guide/cargo-ho
 ### AUR
 
 ```
-yay -Sy osoy-bin
+yay -S osoy-bin
 ```
 
 ### Compiling from Source

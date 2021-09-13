@@ -77,8 +77,8 @@ aur:
   variables:
     AUR_KEY: $AUR_KEY
   script:
-    - version=$(sed -n 's/^version\s*=\s*"\(.*\)".*/\1/p' Cargo.toml | head -n1)
-    - echo $version
+    - VERSION=$(sed -n 's/^version\s*=\s*"\(.*\)".*/\1/p' Cargo.toml | head -n1)
+    - echo $VERSION
     - mkdir -p ~/.ssh
     - cp -f $AUR_KEY ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
@@ -92,14 +92,9 @@ aur:
     - cd osoy-src
     - SHA1=$(sed -n 's/^\(.*\)  osoy-'"$CI_COMMIT_TAG"'-src.tar.gz$/\1/p' ../target/osoy-$CI_COMMIT_TAG.sha1.txt)
     - MD5=$(sed -n 's/^\(.*\)  osoy-'"$CI_COMMIT_TAG"'-src.tar.gz$/\1/p' ../target/osoy-$CI_COMMIT_TAG.md5.txt)
-    - sed -i 's/^pkgver=.*$/pkgver='"$version"'/' PKGBUILD
-    - sed -i 's/^pkgrel=.*$/pkgrel=1/' PKGBUILD
-    - sed -i 's/^sha1sums=.*$/sha1sums=('"'$SHA1'"')/' PKGBUILD
-    - sed -i 's/^md5sums=.*$/md5sums=('"'$MD5'"')/' PKGBUILD
-    - sed -i 's/pkgver = .*$/pkgver = '"$version"'/' .SRCINFO
-    - sed -i 's/pkgrel = .*$/pkgrel = 1/' .SRCINFO
-    - sed -i 's/sha1sums = .*$/sha1sums = ('"'$SHA1'"')/' .SRCINFO
-    - sed -i 's/md5sums = .*$/md5sums = ('"'$MD5'"')/' .SRCINFO
+    - sed -i "s/%VERSION%/$VERSION/" PKGBUILD .SRCINFO
+    - sed -i "s/%SHA1%/$SHA1/" PKGBUILD .SRCINFO
+    - sed -i "s/%MD5%/$MD5/" PKGBUILD .SRCINFO
     - cat PKGBUILD
     - cat .SRCINFO
     - git diff
@@ -109,14 +104,9 @@ aur:
     - cd ../osoy-bin
     - SHA1=$(sed -n 's/^\(.*\)  osoy-'"$CI_COMMIT_TAG"'.tar.gz$/\1/p' ../target/osoy-$CI_COMMIT_TAG.sha1.txt)
     - MD5=$(sed -n 's/^\(.*\)  osoy-'"$CI_COMMIT_TAG"'.tar.gz$/\1/p' ../target/osoy-$CI_COMMIT_TAG.md5.txt)
-    - sed -i 's/^pkgver=.*$/pkgver='"$version"'/' PKGBUILD
-    - sed -i 's/^pkgrel=.*$/pkgrel=1/' PKGBUILD
-    - sed -i 's/^sha1sums=.*$/sha1sums=('"'$SHA1'"')/' PKGBUILD
-    - sed -i 's/^md5sums=.*$/md5sums=('"'$MD5'"')/' PKGBUILD
-    - sed -i 's/pkgver = .*$/pkgver = '"$version"'/' .SRCINFO
-    - sed -i 's/pkgrel = .*$/pkgrel = 1/' .SRCINFO
-    - sed -i 's/sha1sums = .*$/sha1sums = ('"'$SHA1'"')/' .SRCINFO
-    - sed -i 's/md5sums = .*$/md5sums = ('"'$MD5'"')/' .SRCINFO
+    - sed -i "s/%VERSION%/$VERSION/" PKGBUILD .SRCINFO
+    - sed -i "s/%SHA1%/$SHA1/" PKGBUILD .SRCINFO
+    - sed -i "s/%MD5%/$MD5/" PKGBUILD .SRCINFO
     - cat PKGBUILD
     - cat .SRCINFO
     - git diff
