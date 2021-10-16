@@ -70,7 +70,11 @@ impl Exec for Opt {
 
                 for path in iter {
                     let exe_listing = symlinks.as_ref().map_or(String::new(), |symlinks| {
-                        executable_listing(&path, &config.bin, symlinks).join("\n  ")
+                        executable_listing(&path, &config.bin, symlinks)
+                            .iter()
+                            .fold(String::new(), |state, line| {
+                                format!("{}\n  {}", state, line)
+                            })
                     });
 
                     let git_status = self

@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.5.1] - 2021-10-16
+
+### Fixed
+
+- executable list new-line
+
 ## [0.5.0] - 2021-09-11
 
 ### Added
@@ -49,7 +55,8 @@ and this project adheres to
 
 - Full rewrite
 
-[unreleased]: https://gitlab.com/osoy/osoy/compare/v0.5.0...main
+[unreleased]: https://gitlab.com/osoy/osoy/compare/v0.5.1...main
+[0.5.1]: https://gitlab.com/osoy/osoy/compare/v0.5.0...v0.5.1
 [0.5.0]: https://gitlab.com/osoy/osoy/compare/v0.4.1...v0.5.0
 [0.4.1]: https://gitlab.com/osoy/osoy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://gitlab.com/osoy/osoy/compare/v0.3.1...v0.4.0
